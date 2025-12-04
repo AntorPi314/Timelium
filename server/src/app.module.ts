@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user.module';
+import { GeminiModule } from './gemini/gemini.module'; // ADD THIS
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UserModule } from './user.module';
       inject: [ConfigService],
     }),
     UserModule,
+    GeminiModule, // ADD THIS
   ],
   controllers: [AppController],
   providers: [AppService],
