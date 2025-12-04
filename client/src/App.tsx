@@ -1,7 +1,12 @@
 import { useState } from 'react';
 
+type Message = {
+  role: string;
+  text: string;
+};
+
 function App() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -10,26 +15,24 @@ function App() {
 
     const userMessage = input;
     setInput('');
-    
+
     // Add user message to chat
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setLoading(true);
 
     try {
-      // Call your backend API
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       const response = await fetch(`${API_URL}/gemini/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${yourJWTToken}` // Uncomment when you add auth
         },
         body: JSON.stringify({ message: userMessage })
       });
 
       const data = await response.json();
-      
-      // Add AI response to chat
+
+      // Add AI response
       setMessages(prev => [...prev, { 
         role: 'ai', 
         text: data.response 
@@ -45,7 +48,7 @@ function App() {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -72,8 +75,7 @@ function App() {
           </div>
         </div>
 
-        <div className="p-6">
-        </div>
+        <div className="p-6"></div>
       </div>
 
       <div className="absolute right-0 top-0 w-[590px] h-screen p-10 bg-[#1A0B2E]">
@@ -82,8 +84,8 @@ function App() {
         </div>
 
         <div className="absolute bottom-12 right-12 w-[480px] h-[350px] bg-white rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden">
-          
-          {/* Messages Container */}
+
+          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-6">
             {messages.length === 0 ? (
               <div className="h-full flex items-center justify-center">
@@ -111,8 +113,8 @@ function App() {
                     </div>
                   </div>
                 ))}
-                
-                {/* Loading indicator */}
+
+                {/* Loading */}
                 {loading && (
                   <div className="flex justify-start">
                     <div className="bg-slate-100 px-4 py-3 rounded-2xl">
@@ -128,7 +130,7 @@ function App() {
             )}
           </div>
 
-          {/* Input Box */}
+          {/* Input */}
           <div className="p-6">
             <div className="w-full h-16 p-[2px] rounded-[20px] bg-gradient-to-r from-fuchsia-500 via-purple-500 to-cyan-400">
               <div className="w-full h-full bg-slate-50 rounded-[18px] flex items-center px-5 gap-2">
