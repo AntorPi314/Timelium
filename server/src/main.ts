@@ -4,9 +4,12 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Enable CORS
+  // Enable CORS for both local and production
   app.enableCors({
-    origin: 'http://localhost:5173', // Your Vite dev server
+    origin: [
+      'http://localhost:5173',           // Local development
+      'https://timelium.vercel.app'      // Production
+    ],
     credentials: true,
   });
   
