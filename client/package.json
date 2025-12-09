@@ -13,11 +13,13 @@
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-dialog": "^1.1.15",
     "@tailwindcss/vite": "^4.1.17",
+    "axios": "^1.13.2",
     "lucide-react": "^0.556.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.68.0",
     "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.10.1",
     "tailwindcss": "^4.1.17",
     "zod": "^4.1.13"
   },

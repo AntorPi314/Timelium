@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Home, User } from "lucide-react";
+import { Home, User, Plus } from "lucide-react";
 import LoginSignUpCard from "../components/ui/LoginSignUpCard";
+
 
 const Split0 = () => {
   const [open, setOpen] = useState(false);
@@ -13,6 +14,7 @@ const Split0 = () => {
         <p className="text-5xl text-fuchsia-600 font-medium">T</p>
 
         <div className="w-full flex justify-end">
+          <Plus className="w-8 h-auto text-white mr-4" />
           <Home className="w-8 h-auto text-white mr-4" />
           <User
             onClick={() => setOpen(true)}

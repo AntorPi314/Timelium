@@ -3,8 +3,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './user.module';
-import { GeminiModule } from './gemini/gemini.module'; // ADD THIS
+import { UserModule } from './modules/users/user.module';
+import { AuthModule } from './modules/auth/auth.module';t
+import { GeminiModule } from './modules/gemini/gemini.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { GeminiModule } from './gemini/gemini.module'; // ADD THIS
       inject: [ConfigService],
     }),
     UserModule,
-    GeminiModule, // ADD THIS
+    AuthModule,
+    GeminiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

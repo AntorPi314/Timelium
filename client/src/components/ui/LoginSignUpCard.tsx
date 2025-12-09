@@ -4,6 +4,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
+import axios from "axios";
+
+// API URL (env theke nile valo, ekhon hardcode korlam testing er jonno)
+const API_URL = "http://localhost:3000/auth";
 
 /* ---------------------- ZOD SCHEMAS ----------------------- */
 const loginSchema = z.object({
@@ -26,6 +30,7 @@ const signUpSchema = z.object({
 
 const LoginSignUpCard = ({ open, onClose }) => {
   const [tab, setTab] = useState<"login" | "signup">("login");
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
@@ -36,22 +41,55 @@ const LoginSignUpCard = ({ open, onClose }) => {
     resolver: zodResolver(tab === "login" ? loginSchema : signUpSchema),
   });
 
-  const onSubmit = (data: any) => {
-    if (tab === "login") {
-      toast.success("Logged in successfully!");
-    } else {
-      toast.success("Account created successfully!");
+  const onSubmit = async (data: any) => {
+    setLoading(true);
+    try {
+      if (tab === "login") {
+        // --- LOGIN REQUEST ---
+        const response = await axios.post(`${API_URL}/login`, {
+          emailOrUser: data.emailOrUser,
+          password: data.password
+        });
+        
+        // Save Token
+        localStorage.setItem("token", response.data.access_token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        
+        toast.success(`Welcome back, ${response.data.user.fullname}!`);
+        onClose(); // Close modal
+      } else {
+        // --- SIGNUP REQUEST ---
+        const response = await axios.post(`${API_URL}/register`, {
+          fullname: data.fullname,
+          username: data.username,
+          email: data.email,
+          password: data.password
+        });
+
+        // Save Token (Auto login after signup)
+        localStorage.setItem("token", response.data.access_token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        toast.success("Account created successfully!");
+        onClose(); // Close modal
+      }
+      reset();
+    } catch (error: any) {
+      console.error(error);
+      const message = error.response?.data?.message || "Something went wrong!";
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
-    reset();
   };
 
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+        <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
 
         <Dialog.Content
-          className="fixed top-1/2 left-1/2 w-[400px] -translate-x-1/2 -translate-y-1/2 
+          className="fixed z-50 top-1/2 left-1/2 w-[400px] -translate-x-1/2 -translate-y-1/2 
           bg-[#1F1D47] p-8 rounded-2xl shadow-xl border border-white/10"
         >
           <Dialog.Close className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl">
@@ -65,7 +103,8 @@ const LoginSignUpCard = ({ open, onClose }) => {
           {/* TAB SWITCH */}
           <div className="flex mb-6 bg-white/10 rounded-xl p-1">
             <button
-              onClick={() => setTab("login")}
+              type="button"
+              onClick={() => { setTab("login"); reset(); }}
               className={`flex-1 py-2 rounded-xl transition ${
                 tab === "login" ? "bg-pink-600 text-white" : "text-gray-300"
               }`}
@@ -74,7 +113,8 @@ const LoginSignUpCard = ({ open, onClose }) => {
             </button>
 
             <button
-              onClick={() => setTab("signup")}
+              type="button"
+              onClick={() => { setTab("signup"); reset(); }}
               className={`flex-1 py-2 rounded-xl transition ${
                 tab === "signup" ? "bg-pink-600 text-white" : "text-gray-300"
               }`}
@@ -91,7 +131,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                   <input
                     {...register("emailOrUser")}
                     placeholder="Username or Email"
-                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none"
+                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.emailOrUser && (
                     <p className="text-red-400 text-sm mt-1">{errors.emailOrUser.message}</p>
@@ -103,7 +143,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     {...register("password")}
                     type="password"
                     placeholder="Password"
-                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none"
+                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.password && (
                     <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
@@ -116,7 +156,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                   <input
                     {...register("username")}
                     placeholder="Username"
-                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none"
+                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.username && (
                     <p className="text-red-400 text-sm mt-1">{errors.username.message}</p>
@@ -127,7 +167,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                   <input
                     {...register("fullname")}
                     placeholder="Full Name"
-                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none"
+                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.fullname && (
                     <p className="text-red-400 text-sm mt-1">{errors.fullname.message}</p>
@@ -139,7 +179,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     {...register("email")}
                     placeholder="Email"
                     type="email"
-                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none"
+                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.email && (
                     <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>
@@ -151,7 +191,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     {...register("password")}
                     type="password"
                     placeholder="Password"
-                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none"
+                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.password && (
                     <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
@@ -163,7 +203,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     {...register("confirm")}
                     type="password"
                     placeholder="Confirm Password"
-                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none"
+                    className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.confirm && (
                     <p className="text-red-400 text-sm mt-1">{errors.confirm.message}</p>
@@ -174,9 +214,10 @@ const LoginSignUpCard = ({ open, onClose }) => {
 
             <button
               type="submit"
-              className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-xl mt-4 font-semibold"
+              disabled={loading}
+              className="w-full bg-pink-600 hover:bg-pink-700 disabled:bg-pink-800 disabled:cursor-not-allowed text-white py-3 rounded-xl mt-4 font-semibold transition-all shadow-lg shadow-pink-500/30"
             >
-              {tab === "login" ? "Login" : "Sign Up"}
+              {loading ? "Processing..." : (tab === "login" ? "Login" : "Sign Up")}
             </button>
           </form>
         </Dialog.Content>
