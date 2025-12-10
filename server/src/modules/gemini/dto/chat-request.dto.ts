@@ -3,6 +3,6 @@ import { IsNotEmpty, IsString, MinLength } from 'class-validator';
 export class ChatRequestDto {
   @IsNotEmpty()
   @IsString()
-  @MinLength(5, { message: 'Prompt অবশ্যই ৫ অক্ষরের বেশি হতে হবে।' }) // Prompt validation
+  @MinLength(5, { message: 'Prompt must greater than 5 character' }) 
   prompt: string;
 }

@@ -20,9 +20,8 @@ const App = () => {
             </div>
           }
         />
-
-
-        <Route path="/antor" element={<Profile />} />
+        {/* Dynamic Username Route (Public) */}
+        <Route path="/:username" element={<Profile />} />
       </Routes>
 
       <Toaster position="top-center" />

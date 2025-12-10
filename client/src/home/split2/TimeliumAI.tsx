@@ -21,7 +21,7 @@ const TimeliumAI = () => {
       const token = localStorage.getItem('token');
       if (!token) {
         setLoading(false);
-        toast.error('AI ব্যবহার করার জন্য আপনাকে লগইন করতে হবে।');
+        toast.error('You must be logged in to use Timelium AI.');
         setMessages(prev => [...prev, { 
           role: 'ai', 
           text: 'Authentication Required: Please log in to use Timelium AI.' 
@@ -50,7 +50,7 @@ const TimeliumAI = () => {
         throw new Error(data.message || 'AI API call failed');
       }
       
-      // ✅ FIX: Backend returns { text: "..." } so we access data.text
+      // FIX: Backend returns { text: "..." } so we access data.text
       setMessages(prev => [...prev, { 
         role: 'ai', 
         text: data.text || 'No response received' 

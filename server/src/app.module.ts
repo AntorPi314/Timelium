@@ -4,8 +4,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './modules/users/user.module';
-import { AuthModule } from './modules/auth/auth.module';t
+import { AuthModule } from './modules/auth/auth.module'; // Fixed Typo here
 import { GeminiModule } from './modules/gemini/gemini.module';
+import { CloudinaryConfig } from './config//cloudinary.config';
+import { PostsModule } from './modules/posts/posts.module';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { GeminiModule } from './modules/gemini/gemini.module';
     UserModule,
     AuthModule,
     GeminiModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

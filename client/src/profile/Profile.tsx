@@ -1,54 +1,190 @@
-import React, { useState } from "react";
-import { 
-  Plus, 
-  MessageSquare, 
-  Linkedin, 
-  Youtube, 
-  Facebook, 
-  PlusCircle 
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
+import {
+  Plus,
+  MessageSquare,
+  Linkedin,
+  Youtube,
+  Facebook,
+  PlusCircle,
+  UserRoundPen,
+  MapPin,
+  Github,
+  Loader2,
 } from "lucide-react";
-import PostCard from "../components/ui/PostCard"; // Importing your existing component
+import PostCard from "../components/ui/PostCard";
+import EditProfileDialog, {
+  UserProfileData,
+} from "../components/ui/EditProfileDialog";
+import CreatePostDialog from "../components/ui/CreatePostDialog";
+
+interface Post {
+  _id: string;
+  content: string;
+  image?: string;
+  createdAt: string;
+  user: {
+    fullname: string;
+    avatar: string;
+  };
+  likes: string[];
+}
 
 const Profile = () => {
+  const { username } = useParams();
   const [activeTab, setActiveTab] = useState("Posts");
-
   const tabs = ["Posts", "Skills", "Projects", "Experience", "Education"];
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const [posts, setPosts] = useState<Post[]>([]);
+
+  const [profile, setProfile] = useState<UserProfileData>({
+    avatar: null,
+    name: null,
+    title: null,
+    location: null,
+    about: null,
+    linkedin: null,
+    youtube: null,
+    github: null,
+    facebook: null,
+  });
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isMyProfile = currentUser?.username === username;
+
+  const handleDeletePost = async (postId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_URL}/posts/${postId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Post deleted successfully");
+      fetchProfileAndPosts(); 
+    } catch (error) {
+      console.error("Delete failed", error);
+      toast.error("Failed to delete post");
+    }
+  };
+
+  const fetchProfileAndPosts = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_URL}/users/${username}`);
+      const userData = res.data;
+
+      if (userData) {
+        setProfile({
+          avatar: userData.avatar,
+          name: userData.fullname,
+          title: userData.title,
+          location: userData.location,
+          about: userData.about,
+          linkedin: userData.links?.linkedin,
+          youtube: userData.links?.youtube,
+          github: userData.links?.github,
+          facebook: userData.links?.facebook,
+        });
+
+        if (userData._id) {
+          const postRes = await axios.get(
+            `${API_URL}/posts/user/${userData._id}`
+          );
+          setPosts(postRes.data);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Could not load profile data.");
+    } finally {
+      setLoading(false);
+    }
+  }, [username, API_URL]);
+
+  useEffect(() => {
+    if (username) fetchProfileAndPosts();
+  }, [username, fetchProfileAndPosts]);
+
+  const handleSaveProfile = async (updatedData: UserProfileData) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return toast.error("Unauthorized");
+
+      const payload = {
+        fullname: updatedData.name,
+        title: updatedData.title,
+        location: updatedData.location,
+        about: updatedData.about,
+        avatar: updatedData.avatar,
+        links: {
+          linkedin: updatedData.linkedin,
+          youtube: updatedData.youtube,
+          github: updatedData.github,
+          facebook: updatedData.facebook,
+        },
+      };
+      await axios.put(`${API_URL}/users/profile/update`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProfile(updatedData);
+      toast.success("Profile updated!");
+    } catch (error) {
+      toast.error("Update failed.");
+    }
+  };
+
+  
+  const handlePostCreated = () => {
+    fetchProfileAndPosts(); 
+    toast.success("Post created successfully!");
+  };
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full bg-[#381B5E] flex items-center justify-center text-white">
+        <Loader2 className="animate-spin w-10 h-10 text-pink-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#381B5E] p-4 md:p-8 flex items-center justify-center">
-      
-      {/* Main Container (The large dark purple card) */}
       <div className="w-full max-w-[1400px] bg-[#2E1065] rounded-[40px] p-6 md:p-10 shadow-2xl min-h-[85vh] flex flex-col relative overflow-hidden">
-        
-        {/* Top Gradient/Light Effect (Optional visual flair) */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-purple-500/10 to-transparent pointer-events-none" />
 
-        {/* --- HEADER NAVIGATION --- */}
+        {/* --- HEADER --- */}
         <div className="flex flex-col md:flex-row items-center justify-between mb-10 z-10 gap-6">
-          
           <div className="flex items-center gap-8 w-full md:w-auto">
-            {/* Logo Text */}
-            <h1 className="text-4xl font-cursive text-white italic font-bold">Hi,,</h1>
-            
-            {/* Plus Icon Button */}
-            <button className="w-10 h-10 rounded-full border-2 border-white/30 flex items-center justify-center text-white hover:bg-white/10 transition">
-              <Plus size={24} />
-            </button>
+            <h1 className="text-4xl font-cursive text-white italic font-bold">
+              Hi, {profile.name || username}
+            </h1>
 
-            {/* Navigation Tabs */}
+            {isMyProfile && (
+              <button
+                onClick={() => setIsCreatePostOpen(true)}
+                className="w-10 h-10 rounded-full border-2 border-white/30 flex items-center justify-center text-white hover:bg-white/10 transition"
+              >
+                <Plus size={24} />
+              </button>
+            )}
+
             <nav className="hidden md:flex items-center gap-8">
               {tabs.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`text-lg font-medium transition-all duration-300 relative pb-1 ${
-                    activeTab === tab 
-                      ? "text-white" 
+                    activeTab === tab
+                      ? "text-white"
                       : "text-white/60 hover:text-white"
                   }`}
                 >
                   {tab}
-                  {/* Active Underline Indicator */}
                   {activeTab === tab && (
                     <span className="absolute bottom-0 left-0 w-8 h-1 bg-white rounded-full transition-all duration-300" />
                   )}
@@ -56,100 +192,174 @@ const Profile = () => {
               ))}
             </nav>
           </div>
-
-          {/* Hire Me Button */}
           <button className="bg-white text-[#2E1065] px-6 py-2.5 rounded-full font-bold flex items-center gap-2 hover:bg-gray-100 transition shadow-lg">
             <MessageSquare className="fill-[#2E1065]" size={18} />
             Hire me
           </button>
         </div>
 
-        {/* --- MAIN CONTENT GRID --- */}
+        {/* --- GRID CONTENT --- */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 z-10 h-full">
-          
-          {/* LEFT: POSTS FEED (Span 8 columns) */}
+          {/* Left Posts Area */}
           <div className="lg:col-span-8 flex flex-col gap-6">
-            
-            {/* Reusing your PostCard Component */}
-            <PostCard
-              avatarUrl="https://i.imgur.com/6VBx3io.jpeg" // Using the same image from your Split1 example
-              name="Kamal"
-              likes={54}
-              time="08:20 PM"
-              content={`Excited to share my new experience at the shoe store! I've been able to help customers find the perfect shoes and, at the same time, improve my sales skills. Every day is a new learning opportunity, and I'm loving this journey!
-
-#SalesLife #CustomerFirst #ShoeStore #NewExperience #PassionForWork`}
-              images={[
-                "https://i.imgur.com/Sd0pV9N.jpeg",
-                "https://i.imgur.com/4ZQZ4Q0.jpeg",
-                "https://i.imgur.com/vRk5s8q.jpeg",
-              ]}
-              liked={true}
-              onToggleLike={() => {}}
-            />
-
+            {posts.length > 0 ? (
+              posts.map((post) => (
+                <PostCard
+                  key={post._id}
+                  avatarUrl={
+                    post.user?.avatar || "https://i.imgur.com/6VBx3io.jpeg"
+                  }
+                  name={post.user?.fullname || "User"}
+                  likes={post.likes.length}
+                  time={new Date(post.createdAt).toLocaleDateString()}
+                  content={post.content}
+                  images={post.image ? [post.image] : []}
+                  liked={false}
+                  onDelete={
+                    isMyProfile ? () => handleDeletePost(post._id) : undefined
+                  }
+                />
+              ))
+            ) : (
+              <div className="text-white/50 text-center py-10 bg-[#1F1D47] rounded-2xl">
+                No posts yet.
+              </div>
+            )}
           </div>
 
-          {/* RIGHT: PROFILE SIDEBAR (Span 4 columns) */}
+          {/* Right Sidebar */}
           <div className="lg:col-span-4 flex flex-col items-center text-center">
-            
-            {/* Profile Picture */}
-            <div className="relative mb-4">
+            <div className="relative mb-4 group">
               <div className="w-40 h-40 rounded-full p-[4px] bg-gradient-to-tr from-blue-400 to-purple-500">
                 <img
-                  src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80" 
+                  src={profile.avatar || "https://via.placeholder.com/150"}
                   alt="Profile"
-                  className="w-full h-full rounded-full object-cover border-4 border-[#2E1065]"
+                  className="w-full h-full rounded-full object-cover border-4 border-[#2E1065] bg-white"
                 />
               </div>
             </div>
 
-            {/* Follow Button */}
-            <button className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 mb-4 hover:bg-[#c3d632] transition">
-              <PlusCircle size={18} className="text-black" />
-              Follow
-            </button>
+            {isMyProfile ? (
+              <button
+                onClick={() => setIsCreatePostOpen(true)}
+                className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 mb-4 hover:bg-[#c3d632] transition shadow-lg hover:shadow-[#D4E936]/20"
+              >
+                <PlusCircle size={18} className="text-black" />
+                Create Post
+              </button>
+            ) : (
+              <button className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 mb-4 hover:bg-[#c3d632] transition">
+                <PlusCircle size={18} className="text-black" />
+                Follow
+              </button>
+            )}
 
-            {/* Name & Title */}
-            <h2 className="text-3xl font-bold text-white mb-2">Antor Hawlader</h2>
+            <div className="flex items-center justify-center gap-3">
+              <h2 className="text-3xl font-bold text-white mb-2 capitalize">
+                {profile.name || username}
+              </h2>
+              {isMyProfile && (
+                <button
+                  onClick={() => setIsEditOpen(true)}
+                  className="hover:bg-white/10 p-2 rounded-full transition"
+                >
+                  <UserRoundPen className="text-pink-500 w-6 h-6" />
+                </button>
+              )}
+            </div>
+
             <p className="text-white/80 text-sm mb-6 leading-relaxed">
-              Full-Stack MERN | Android Developer | UI/UX Designer
+              {profile.title || "No Title Added"}
             </p>
 
-            {/* Social Icons */}
             <div className="flex items-center gap-4 mb-8">
-              <SocialIcon icon={<Linkedin size={20} />} color="bg-[#0077B5]" />
-              <SocialIcon icon={<Youtube size={20} />} color="bg-[#FF0000]" />
-              <SocialIcon icon={<Facebook size={20} />} color="bg-[#1877F2]" />
+              {profile.linkedin && (
+                <SocialIcon
+                  icon={<Linkedin size={20} />}
+                  color="bg-[#0077B5]"
+                  link={profile.linkedin}
+                />
+              )}
+              {profile.github && (
+                <SocialIcon
+                  icon={<Github size={20} />}
+                  color="bg-[#333]"
+                  link={profile.github}
+                />
+              )}
+              {profile.youtube && (
+                <SocialIcon
+                  icon={<Youtube size={20} />}
+                  color="bg-[#FF0000]"
+                  link={profile.youtube}
+                />
+              )}
+              {profile.facebook && (
+                <SocialIcon
+                  icon={<Facebook size={20} />}
+                  color="bg-[#1877F2]"
+                  link={profile.facebook}
+                />
+              )}
             </div>
 
-            <div className="text-left w-full">
-              <h3 className="text-pink-500 text-xl font-bold mb-2">Location</h3>
-              <p className="text-white/70 text-sm leading-relaxed mb-3">Dhaka, Bangladesh</p>
-            </div>
-
-            {/* About Section */}
-            <div className="text-left w-full">
-              <h3 className="text-pink-500 text-xl font-bold mb-2">About</h3>
-              <p className="text-white/70 text-sm leading-relaxed">
-                I am a passionate Software Developer specializing in Full-Stack MERN, Android Development, and UI/UX Design.
-                <br /><br />
-                For me, design is a top priority, no matter which stack or technology I use, I believe that a well-crafted design makes all the difference.
+            <div className="text-left w-full mb-6">
+              <h3 className="text-pink-500 text-xl font-bold mb-2 flex items-center gap-2">
+                <MapPin size={18} /> Location
+              </h3>
+              <p className="text-white/70 text-sm leading-relaxed mb-3">
+                {profile.location || "N/A"}
               </p>
             </div>
 
+            <div className="text-left w-full">
+              <h3 className="text-pink-500 text-xl font-bold mb-2">About</h3>
+              <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">
+                {profile.about || "N/A"}
+              </p>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* --- MODALS --- */}
+      {isMyProfile && (
+        <>
+          <EditProfileDialog
+            open={isEditOpen}
+            onClose={() => setIsEditOpen(false)}
+            profileData={profile}
+            onSave={handleSaveProfile}
+          />
+
+          <CreatePostDialog
+            open={isCreatePostOpen}
+            onClose={() => setIsCreatePostOpen(false)}
+            onPostCreated={handlePostCreated} // 
+          />
+        </>
+      )}
     </div>
   );
 };
 
-// Helper component for Social Icons to keep code clean
-const SocialIcon = ({ icon, color }: { icon: React.ReactNode; color: string }) => (
-  <button className={`${color} w-10 h-10 rounded-full flex items-center justify-center text-white hover:scale-110 transition shadow-lg`}>
+const SocialIcon = ({
+  icon,
+  color,
+  link,
+}: {
+  icon: React.ReactNode;
+  color: string;
+  link: string;
+}) => (
+  <a
+    href={link.startsWith("http") ? link : `https://${link}`}
+    target="_blank"
+    rel="noreferrer"
+    className={`${color} w-10 h-10 rounded-full flex items-center justify-center text-white hover:scale-110 transition shadow-lg cursor-pointer`}
+  >
     {icon}
-  </button>
+  </a>
 );
 
 export default Profile;
