@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 
 // API URL (env theke nile valo, ekhon hardcode korlam testing er jonno)
-const API_URL = "http://localhost:3000/auth";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/auth";
 
 /* ---------------------- ZOD SCHEMAS ----------------------- */
 const loginSchema = z.object({
@@ -28,7 +28,12 @@ const signUpSchema = z.object({
 
 /* ---------------------- COMPONENT ----------------------- */
 
-const LoginSignUpCard = ({ open, onClose }) => {
+interface LoginSignUpCardProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+const LoginSignUpCard = ({ open, onClose }: LoginSignUpCardProps) => {
   const [tab, setTab] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +55,6 @@ const LoginSignUpCard = ({ open, onClose }) => {
           emailOrUser: data.emailOrUser,
           password: data.password
         });
-        
         // Save Token
         localStorage.setItem("token", response.data.access_token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -65,11 +69,9 @@ const LoginSignUpCard = ({ open, onClose }) => {
           email: data.email,
           password: data.password
         });
-
         // Save Token (Auto login after signup)
         localStorage.setItem("token", response.data.access_token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
-
         toast.success("Account created successfully!");
         onClose(); // Close modal
       }
@@ -134,7 +136,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.emailOrUser && (
-                    <p className="text-red-400 text-sm mt-1">{errors.emailOrUser.message}</p>
+                    <p className="text-red-400 text-sm mt-1">{errors.emailOrUser.message as string}</p>
                   )}
                 </div>
 
@@ -146,7 +148,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.password && (
-                    <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
+                    <p className="text-red-400 text-sm mt-1">{errors.password.message as string}</p>
                   )}
                 </div>
               </>
@@ -159,7 +161,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.username && (
-                    <p className="text-red-400 text-sm mt-1">{errors.username.message}</p>
+                    <p className="text-red-400 text-sm mt-1">{errors.username.message as string}</p>
                   )}
                 </div>
 
@@ -170,7 +172,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.fullname && (
-                    <p className="text-red-400 text-sm mt-1">{errors.fullname.message}</p>
+                    <p className="text-red-400 text-sm mt-1">{errors.fullname.message as string}</p>
                   )}
                 </div>
 
@@ -182,7 +184,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.email && (
-                    <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>
+                    <p className="text-red-400 text-sm mt-1">{errors.email.message as string}</p>
                   )}
                 </div>
 
@@ -194,7 +196,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.password && (
-                    <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
+                    <p className="text-red-400 text-sm mt-1">{errors.password.message as string}</p>
                   )}
                 </div>
 
@@ -206,7 +208,7 @@ const LoginSignUpCard = ({ open, onClose }) => {
                     className="w-full px-4 py-3 bg-[#2A284D] rounded-xl text-white outline-none focus:ring-2 focus:ring-pink-500 transition"
                   />
                   {errors.confirm && (
-                    <p className="text-red-400 text-sm mt-1">{errors.confirm.message}</p>
+                    <p className="text-red-400 text-sm mt-1">{errors.confirm.message as string}</p>
                   )}
                 </div>
               </>

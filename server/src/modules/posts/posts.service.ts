@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Post } from './schemas/post.schema';
@@ -28,10 +32,30 @@ export class PostsService {
     }
 
     if (post.user.toString() !== userId) {
-      throw new UnauthorizedException('You are not authorized to delete this post');
+      throw new UnauthorizedException(
+        'You are not authorized to delete this post',
+      );
     }
 
     return this.postModel.findByIdAndDelete(postId);
+  }
+
+  async toggleLike(postId: string, userId: string): Promise<Post> {
+    const post = await this.postModel.findById(postId);
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const likeIndex = post.likes.indexOf(userId as any);
+
+    if (likeIndex > -1) {
+      post.likes.splice(likeIndex, 1);
+    } else {
+      post.likes.push(userId as any);
+    }
+
+    return post.save();
   }
 
   // Image Upload Helper

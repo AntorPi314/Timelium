@@ -1,4 +1,3 @@
-import React from 'react'
 import TimeliumAI from './split2/TimeliumAI'
 import TitleAndSearch from './split2/TitleAndSearch'
 import SearchResult from './split2/SearchResult'

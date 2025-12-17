@@ -8,7 +8,7 @@ import {
   UploadedFile,
   Get,
   Param,
-  Delete, 
+  Delete,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -54,5 +54,11 @@ export class PostsController {
   @Get('user/:userId')
   async getPostsByUser(@Param('userId') userId: string) {
     return this.postsService.findByUser(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/like')
+  async toggleLike(@Param('id') id: string, @Req() req: any) {
+    return this.postsService.toggleLike(id, req.user.userId);
   }
 }

@@ -1,12 +1,93 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { Loader2 } from "lucide-react";
 import PostCard from "../components/ui/PostCard";
+import toast from "react-hot-toast";
+
+interface Post {
+  _id: string;
+  content: string;
+  image?: string;
+  createdAt: string;
+  user: {
+    _id: string;
+    fullname: string;
+    username: string;
+    avatar: string;
+  };
+  likes: string[];
+}
 
 const Split1 = () => {
-  const [liked, setLiked] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+
+  // Fetch all posts
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/posts`);
+        setPosts(response.data);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+        toast.error("Failed to load posts");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [API_URL]);
+
+  // Handle Like Toggle
+  const handleToggleLike = async (postId: string) => {
+    // Check if user is logged in
+    if (!currentUser) {
+      toast.error("Please login to like posts");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Please login to like posts");
+        return;
+      }
+
+      await axios.post(
+        `${API_URL}/posts/${postId}/like`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Update local state
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post._id === postId) {
+            const isLiked = post.likes.includes(currentUser.id);
+            return {
+              ...post,
+              likes: isLiked
+                ? post.likes.filter((id) => id !== currentUser.id)
+                : [...post.likes, currentUser.id],
+            };
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error("Like toggle failed", error);
+      toast.error("Failed to update like");
+    }
+  };
 
   return (
     <div className="w-[43%] h-full bg-[#33175B] flex flex-col">
-
       {/* Header */}
       <div className="w-full h-14 flex items-center justify-center border-b border-white/10">
         <h2 className="text-white text-2xl font-semibold tracking-wide">
@@ -15,31 +96,36 @@ const Split1 = () => {
       </div>
 
       {/* Posts Scroll Section */}
-      <div className="flex-1 w-full px-6 py-8 space-y-8 overflow-y-auto scrollbar-thin">
-        
-        <PostCard
-          avatarUrl="https://i.imgur.com/6VBx3io.jpeg"
-          name="Kamal"
-          likes={54}
-          time="08:20 PM"
-          content="Excited to share my new experience at the shoe store! I've been able to help customers find the perfect shoes and, at the same time, improve my sales skills. Every day is a new learning opportunity, and I'm loving this journey!"
-          images={[
-            "https://i.imgur.com/Sd0pV9N.jpeg",
-            "https://i.imgur.com/4ZQZ4Q0.jpeg",
-            "https://i.imgur.com/vRk5s8q.jpeg",
-          ]}
-          liked={liked}
-          onToggleLike={() => setLiked((prev) => !prev)}
-        />
-
-        <PostCard
-          avatarUrl="https://i.imgur.com/6VBx3io.jpeg"
-          name="Kamal"
-          likes={54}
-          time="08:20 PM"
-          content="Excited to share my new experience at the shoe store! I've been able to help customers find the perfect shoes and, at the same time, improve my sales skills. Every day is a new learning opportunity, and I'm loving this journey!"
-          images={["https://i.imgur.com/Sd0pV9N.jpeg"]}
-        />
+      <div className="flex-1 w-full px-6 py-8 space-y-8 overflow-y-auto no-scrollbar">
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="animate-spin w-10 h-10 text-pink-500" />
+          </div>
+        ) : posts.length > 0 ? (
+          posts.map((post) => (
+            <PostCard
+              key={post._id}
+              avatarUrl={post.user?.avatar || "https://i.imgur.com/6VBx3io.jpeg"}
+              name={post.user?.fullname || "Anonymous"}
+              likes={post.likes.length}
+              time={new Date(post.createdAt).toLocaleString("en-US", {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+              content={post.content}
+              images={post.image ? [post.image] : []}
+              liked={currentUser ? post.likes.includes(currentUser.id) : false}
+              onToggleLike={() => handleToggleLike(post._id)}
+            />
+          ))
+        ) : (
+          <div className="text-center text-white/50 py-20">
+            <p className="text-xl">No posts yet</p>
+            <p className="text-sm mt-2">Be the first to share something!</p>
+          </div>
+        )}
       </div>
     </div>
   );

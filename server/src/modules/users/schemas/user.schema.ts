@@ -34,6 +34,69 @@ export class User extends Document {
     github: string | null;
     facebook: string | null;
   };
+
+  // NEW: Skills Array
+  @Prop({ type: [String], default: [] })
+  skills: string[];
+
+  // NEW: Projects Array
+  @Prop({
+    type: [
+      {
+        title: String,
+        description: String,
+        technologies: [String],
+        link: String,
+        image: String,
+      },
+    ],
+    default: [],
+  })
+  projects: Array<{
+    title: string;
+    description: string;
+    technologies: string[];
+    link?: string;
+    image?: string;
+  }>;
+
+  // NEW: Experience Array
+  @Prop({
+    type: [
+      {
+        company: String,
+        position: String,
+        duration: String,
+        description: String,
+      },
+    ],
+    default: [],
+  })
+  experience: Array<{
+    company: string;
+    position: string;
+    duration: string;
+    description: string;
+  }>;
+
+  // NEW: Education Array
+  @Prop({
+    type: [
+      {
+        institution: String,
+        degree: String,
+        field: String,
+        year: String,
+      },
+    ],
+    default: [],
+  })
+  education: Array<{
+    institution: string;
+    degree: string;
+    field: string;
+    year: string;
+  }>;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

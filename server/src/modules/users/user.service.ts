@@ -56,4 +56,48 @@ export class UserService {
       toStream(file.buffer).pipe(upload);
     });
   }
+
+  // ADD SKILL
+  async addSkill(username: string, skill: string): Promise<User | null> {
+    return this.userModel
+      .findOneAndUpdate(
+        { username },
+        { $addToSet: { skills: skill } }, // Prevents duplicates
+        { new: true },
+      )
+      .exec();
+  }
+
+  // ADD PROJECT
+  async addProject(username: string, project: any): Promise<User | null> {
+    return this.userModel
+      .findOneAndUpdate(
+        { username },
+        { $push: { projects: project } },
+        { new: true },
+      )
+      .exec();
+  }
+
+  // ADD EXPERIENCE
+  async addExperience(username: string, experience: any): Promise<User | null> {
+    return this.userModel
+      .findOneAndUpdate(
+        { username },
+        { $push: { experience: experience } },
+        { new: true },
+      )
+      .exec();
+  }
+
+  // ADD EDUCATION
+  async addEducation(username: string, education: any): Promise<User | null> {
+    return this.userModel
+      .findOneAndUpdate(
+        { username },
+        { $push: { education: education } },
+        { new: true },
+      )
+      .exec();
+  }
 }

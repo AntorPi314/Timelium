@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -13,12 +13,20 @@ import {
   MapPin,
   Github,
   Loader2,
+  Briefcase,
+  GraduationCap,
+  Code,
+  FolderGit2,
 } from "lucide-react";
 import PostCard from "../components/ui/PostCard";
 import EditProfileDialog, {
-  UserProfileData,
+  type UserProfileData,
 } from "../components/ui/EditProfileDialog";
 import CreatePostDialog from "../components/ui/CreatePostDialog";
+import AddSkillDialog from "../components/ui/AddSkillDialog";
+import AddProjectDialog from "../components/ui/AddProjectDialog";
+import AddExperienceDialog from "../components/ui/AddExperienceDialog";
+import AddEducationDialog from "../components/ui/AddEducationDialog";
 
 interface Post {
   _id: string;
@@ -26,6 +34,7 @@ interface Post {
   image?: string;
   createdAt: string;
   user: {
+    _id: string;
     fullname: string;
     avatar: string;
   };
@@ -39,9 +48,17 @@ const Profile = () => {
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [isAddSkillOpen, setIsAddSkillOpen] = useState(false);
+  const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
+  const [isAddExperienceOpen, setIsAddExperienceOpen] = useState(false);
+  const [isAddEducationOpen, setIsAddEducationOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [posts, setPosts] = useState<Post[]>([]);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [experience, setExperience] = useState<any[]>([]);
+  const [education, setEducation] = useState<any[]>([]);
 
   const [profile, setProfile] = useState<UserProfileData>({
     avatar: null,
@@ -59,6 +76,42 @@ const Profile = () => {
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const isMyProfile = currentUser?.username === username;
 
+  const handleToggleLike = async (postId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Please login to like posts");
+        return;
+      }
+
+      await axios.post(
+        `${API_URL}/posts/${postId}/like`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post._id === postId) {
+            const isLiked = post.likes.includes(currentUser.id);
+            return {
+              ...post,
+              likes: isLiked
+                ? post.likes.filter((id) => id !== currentUser.id)
+                : [...post.likes, currentUser.id],
+            };
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error("Like toggle failed", error);
+      toast.error("Failed to update like");
+    }
+  };
+
   const handleDeletePost = async (postId: string) => {
     try {
       const token = localStorage.getItem("token");
@@ -66,7 +119,7 @@ const Profile = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Post deleted successfully");
-      fetchProfileAndPosts(); 
+      fetchProfileAndPosts();
     } catch (error) {
       console.error("Delete failed", error);
       toast.error("Failed to delete post");
@@ -90,6 +143,11 @@ const Profile = () => {
           github: userData.links?.github,
           facebook: userData.links?.facebook,
         });
+
+        setSkills(userData.skills || []);
+        setProjects(userData.projects || []);
+        setExperience(userData.experience || []);
+        setEducation(userData.education || []);
 
         if (userData._id) {
           const postRes = await axios.get(
@@ -128,9 +186,11 @@ const Profile = () => {
           facebook: updatedData.facebook,
         },
       };
+
       await axios.put(`${API_URL}/users/profile/update`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       setProfile(updatedData);
       toast.success("Profile updated!");
     } catch (error) {
@@ -138,10 +198,18 @@ const Profile = () => {
     }
   };
 
-  
-  const handlePostCreated = () => {
-    fetchProfileAndPosts(); 
-    toast.success("Post created successfully!");
+  const handleOpenDialog = () => {
+    if (activeTab === "Posts") {
+      setIsCreatePostOpen(true);
+    } else if (activeTab === "Skills") {
+      setIsAddSkillOpen(true);
+    } else if (activeTab === "Projects") {
+      setIsAddProjectOpen(true);
+    } else if (activeTab === "Experience") {
+      setIsAddExperienceOpen(true);
+    } else if (activeTab === "Education") {
+      setIsAddEducationOpen(true);
+    }
   };
 
   if (loading) {
@@ -153,11 +221,11 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#381B5E] p-4 md:p-8 flex items-center justify-center">
-      <div className="w-full max-w-[1400px] bg-[#2E1065] rounded-[40px] p-6 md:p-10 shadow-2xl min-h-[85vh] flex flex-col relative overflow-hidden">
+    <div className="h-screen w-full bg-[#381B5E] p-4 md:p-4 flex items-center justify-center overflow-hidden">
+      <div className="w-full max-w-[1400px] bg-[#2E1065] rounded-[40px] p-6 md:p-4 shadow-2xl h-[90vh] flex flex-col relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-purple-500/10 to-transparent pointer-events-none" />
 
-        {/* --- HEADER --- */}
+        {/* HEADER */}
         <div className="flex flex-col md:flex-row items-center justify-between mb-10 z-10 gap-6">
           <div className="flex items-center gap-8 w-full md:w-auto">
             <h1 className="text-4xl font-cursive text-white italic font-bold">
@@ -166,7 +234,7 @@ const Profile = () => {
 
             {isMyProfile && (
               <button
-                onClick={() => setIsCreatePostOpen(true)}
+                onClick={handleOpenDialog}
                 className="w-10 h-10 rounded-full border-2 border-white/30 flex items-center justify-center text-white hover:bg-white/10 transition"
               >
                 <Plus size={24} />
@@ -192,38 +260,68 @@ const Profile = () => {
               ))}
             </nav>
           </div>
+
           <button className="bg-white text-[#2E1065] px-6 py-2.5 rounded-full font-bold flex items-center gap-2 hover:bg-gray-100 transition shadow-lg">
             <MessageSquare className="fill-[#2E1065]" size={18} />
             Hire me
           </button>
         </div>
 
-        {/* --- GRID CONTENT --- */}
+        {/* GRID CONTENT */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 z-10 h-full">
-          {/* Left Posts Area */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
-            {posts.length > 0 ? (
-              posts.map((post) => (
-                <PostCard
-                  key={post._id}
-                  avatarUrl={
-                    post.user?.avatar || "https://i.imgur.com/6VBx3io.jpeg"
-                  }
-                  name={post.user?.fullname || "User"}
-                  likes={post.likes.length}
-                  time={new Date(post.createdAt).toLocaleDateString()}
-                  content={post.content}
-                  images={post.image ? [post.image] : []}
-                  liked={false}
-                  onDelete={
-                    isMyProfile ? () => handleDeletePost(post._id) : undefined
-                  }
-                />
-              ))
-            ) : (
-              <div className="text-white/50 text-center py-10 bg-[#1F1D47] rounded-2xl">
-                No posts yet.
-              </div>
+          {/* Left Content Area */}
+          <div className="lg:col-span-8 flex flex-col gap-6 overflow-y-auto no-scrollbar pr-2">
+            {activeTab === "Posts" && (
+              <>
+                {posts.length > 0 ? (
+                  posts.map((post) => (
+                    <PostCard
+                      key={post._id}
+                      avatarUrl={
+                        post.user?.avatar || "https://i.imgur.com/6VBx3io.jpeg"
+                      }
+                      name={post.user?.fullname || "User"}
+                      likes={post.likes.length}
+                      time={new Date(post.createdAt).toLocaleDateString()}
+                      content={post.content}
+                      images={post.image ? [post.image] : []}
+                      liked={post.likes.includes(currentUser.id)}
+                      onToggleLike={() => handleToggleLike(post._id)}
+                      onDelete={
+                        isMyProfile
+                          ? () => handleDeletePost(post._id)
+                          : undefined
+                      }
+                    />
+                  ))
+                ) : (
+                  <EmptyState message="No posts yet." />
+                )}
+              </>
+            )}
+
+            {activeTab === "Skills" && (
+              <SkillsSection skills={skills} isMyProfile={isMyProfile} onAdd={() => setIsAddSkillOpen(true)} />
+            )}
+
+            {activeTab === "Projects" && (
+              <ProjectsSection projects={projects} isMyProfile={isMyProfile} onAdd={() => setIsAddProjectOpen(true)} />
+            )}
+
+            {activeTab === "Experience" && (
+              <ExperienceSection
+                experience={experience}
+                isMyProfile={isMyProfile}
+                onAdd={() => setIsAddExperienceOpen(true)}
+              />
+            )}
+
+            {activeTab === "Education" && (
+              <EducationSection
+                education={education}
+                isMyProfile={isMyProfile}
+                onAdd={() => setIsAddEducationOpen(true)}
+              />
             )}
           </div>
 
@@ -322,7 +420,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* --- MODALS --- */}
+      {/* MODALS */}
       {isMyProfile && (
         <>
           <EditProfileDialog
@@ -335,13 +433,220 @@ const Profile = () => {
           <CreatePostDialog
             open={isCreatePostOpen}
             onClose={() => setIsCreatePostOpen(false)}
-            onPostCreated={handlePostCreated} // 
+            onPostCreated={fetchProfileAndPosts}
+          />
+
+          <AddSkillDialog
+            open={isAddSkillOpen}
+            onClose={() => setIsAddSkillOpen(false)}
+            onSkillAdded={fetchProfileAndPosts}
+          />
+
+          <AddProjectDialog
+            open={isAddProjectOpen}
+            onClose={() => setIsAddProjectOpen(false)}
+            onProjectAdded={fetchProfileAndPosts}
+          />
+
+          <AddExperienceDialog
+            open={isAddExperienceOpen}
+            onClose={() => setIsAddExperienceOpen(false)}
+            onExperienceAdded={fetchProfileAndPosts}
+          />
+
+          <AddEducationDialog
+            open={isAddEducationOpen}
+            onClose={() => setIsAddEducationOpen(false)}
+            onEducationAdded={fetchProfileAndPosts}
           />
         </>
       )}
     </div>
   );
 };
+
+const EmptyState = ({ message }: { message: string }) => (
+  <div className="text-white/50 text-center py-10 bg-[#1F1D47] rounded-2xl">
+    {message}
+  </div>
+);
+
+const SkillsSection = ({
+  skills,
+  isMyProfile,
+  onAdd,
+}: {
+  skills: string[];
+  isMyProfile: boolean;
+  onAdd: () => void;
+}) => (
+  <div className="bg-[#1F1D47] rounded-2xl p-6">
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <Code size={24} className="text-pink-500" /> Skills
+      </h2>
+      {isMyProfile && (
+        <button onClick={onAdd} className="text-pink-500 hover:text-pink-400 transition">
+          <Plus size={20} />
+        </button>
+      )}
+    </div>
+    {skills.length > 0 ? (
+      <div className="flex flex-wrap gap-2">
+        {skills.map((skill, i) => (
+          <span
+            key={i}
+            className="bg-purple-600/30 text-white px-4 py-2 rounded-full text-sm font-medium border border-purple-500/50"
+          >
+            {skill}
+          </span>
+        ))}
+      </div>
+    ) : (
+      <p className="text-white/50">No skills added yet.</p>
+    )}
+  </div>
+);
+
+const ProjectsSection = ({
+  projects,
+  isMyProfile,
+  onAdd,
+}: {
+  projects: any[];
+  isMyProfile: boolean;
+  onAdd: () => void;
+}) => (
+  <div className="bg-[#1F1D47] rounded-2xl p-6">
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <FolderGit2 size={24} className="text-pink-500" /> Projects
+      </h2>
+      {isMyProfile && (
+        <button onClick={onAdd} className="text-pink-500 hover:text-pink-400 transition">
+          <Plus size={20} />
+        </button>
+      )}
+    </div>
+    {projects.length > 0 ? (
+      <div className="space-y-4">
+        {projects.map((project, i) => (
+          <div
+            key={i}
+            className="bg-[#2A284D] p-4 rounded-xl border border-white/10"
+          >
+            <h3 className="text-white font-bold text-lg mb-2">
+              {project.title}
+            </h3>
+            <p className="text-white/70 text-sm mb-3">{project.description}</p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {project.technologies?.map((tech: string, j: number) => (
+                <span
+                  key={j}
+                  className="bg-blue-600/30 text-blue-300 px-3 py-1 rounded-full text-xs"
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+            {project.link && (
+              <a
+                href={project.link}
+                target="_blank"
+                rel="noreferrer"
+                className="text-pink-400 hover:text-pink-300 text-sm underline"
+              >
+                View Project →
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-white/50">No projects added yet.</p>
+    )}
+  </div>
+);
+
+const ExperienceSection = ({
+  experience,
+  isMyProfile,
+  onAdd,
+}: {
+  experience: any[];
+  isMyProfile: boolean;
+  onAdd: () => void;
+}) => (
+  <div className="bg-[#1F1D47] rounded-2xl p-6">
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <Briefcase size={24} className="text-pink-500" /> Experience
+      </h2>
+      {isMyProfile && (
+        <button onClick={onAdd} className="text-pink-500 hover:text-pink-400 transition">
+          <Plus size={20} />
+        </button>
+      )}
+    </div>
+    {experience.length > 0 ? (
+      <div className="space-y-4">
+        {experience.map((exp, i) => (
+          <div
+            key={i}
+            className="bg-[#2A284D] p-4 rounded-xl border border-white/10"
+          >
+            <h3 className="text-white font-bold text-lg">{exp.position}</h3>
+            <p className="text-pink-400 text-sm mb-2">{exp.company}</p>
+            <p className="text-white/60 text-xs mb-3">{exp.duration}</p>
+            <p className="text-white/70 text-sm">{exp.description}</p>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-white/50">No experience added yet.</p>
+    )}
+  </div>
+);
+
+const EducationSection = ({
+  education,
+  isMyProfile,
+  onAdd,
+}: {
+  education: any[];
+  isMyProfile: boolean;
+  onAdd: () => void;
+}) => (
+  <div className="bg-[#1F1D47] rounded-2xl p-6">
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <GraduationCap size={24} className="text-pink-500" /> Education
+      </h2>
+      {isMyProfile && (
+        <button onClick={onAdd} className="text-pink-500 hover:text-pink-400 transition">
+          <Plus size={20} />
+        </button>
+      )}
+    </div>
+    {education.length > 0 ? (
+      <div className="space-y-4">
+        {education.map((edu, i) => (
+          <div
+            key={i}
+            className="bg-[#2A284D] p-4 rounded-xl border border-white/10"
+          >
+            <h3 className="text-white font-bold text-lg">{edu.degree}</h3>
+            <p className="text-pink-400 text-sm mb-2">{edu.institution}</p>
+            <p className="text-white/60 text-xs mb-2">{edu.field}</p>
+            <p className="text-white/70 text-sm">{edu.year}</p>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-white/50">No education added yet.</p>
+    )}
+  </div>
+);
 
 const SocialIcon = ({
   icon,

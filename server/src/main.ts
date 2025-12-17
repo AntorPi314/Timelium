@@ -8,7 +8,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:5173',
-      'https://timelium.vercel.app'      // Production
+      'https://timelium.vercel.app'
     ],
     credentials: true,
   });

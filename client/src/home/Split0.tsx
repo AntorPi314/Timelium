@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Home, User, PlusCircle, LogOut, UserCircle } from "lucide-react";
 import LoginSignUpCard from "../components/ui/LoginSignUpCard";
 import { useNavigate } from "react-router-dom";
