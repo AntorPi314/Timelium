@@ -28,6 +28,21 @@ export class UserService {
     return this.userModel.findById(id).exec();
   }
 
+  async searchUsers(query: string): Promise<User[]> {
+    if (!query) return [];
+    
+    const cleanQuery = query.replace('#', '').trim(); 
+    const regex = new RegExp(cleanQuery, 'i');
+
+    return this.userModel.find({
+      $or: [
+        { fullname: regex },
+        { username: regex },
+        { skills: { $in: [regex] } }
+      ]
+    }).limit(10).exec();
+  }
+
   async updateProfile(username: string, data: any): Promise<User | null> {
     return this.userModel
       .findOneAndUpdate({ username }, data, { new: true })

@@ -13,31 +13,44 @@ interface User {
   skills: string[];
 }
 
-const SearchResult = () => {
+interface SearchResultProps {
+  query: string;
+  onTagClick: (tag: string) => void; // New prop to handle tag clicks
+}
+
+const SearchResult: React.FC<SearchResultProps> = ({ query, onTagClick }) => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const delayDebounceFn = setTimeout(async () => {
+      setLoading(true);
       try {
-        const response = await axios.get(`${API_URL}/users`);
-        // Get random 3-5 users
-        const shuffled = response.data.sort(() => 0.5 - Math.random());
-        const randomUsers = shuffled.slice(0, Math.min(5, shuffled.length));
-        setUsers(randomUsers);
+        let response;
+        
+        if (query.trim()) {
+          response = await axios.get(`${API_URL}/users/search`, {
+            params: { q: query }
+          });
+          setUsers(response.data);
+        } else {
+          response = await axios.get(`${API_URL}/users`);
+          const shuffled = response.data.sort(() => 0.5 - Math.random());
+          const randomUsers = shuffled.slice(0, Math.min(5, shuffled.length));
+          setUsers(randomUsers);
+        }
       } catch (error) {
         console.error("Error fetching users:", error);
-        toast.error("Failed to load trending users");
       } finally {
         setLoading(false);
       }
-    };
+    }, 500);
 
-    fetchUsers();
-  }, [API_URL]);
+    return () => clearTimeout(delayDebounceFn);
+  }, [API_URL, query]);
 
   const handleViewProfile = (username: string) => {
     navigate(`/${username}`);
@@ -54,20 +67,23 @@ const SearchResult = () => {
   if (users.length === 0) {
     return (
       <div className="w-full h-[40%] flex items-center justify-center">
-        <p className="text-white/50 text-sm">No users found</p>
+        <p className="text-white/50 text-sm">
+          {query ? "No match found" : "No users found"}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-[40%] items-center flex flex-col overflow-y-auto no-scrollbar">
+    <div className="w-full h-[40%] items-center flex flex-col overflow-y-auto no-scrollbar pt-2 pb-4">
       {users.map((user) => (
         <SearchProfileCard
           key={user._id}
           name={user.fullname}
-          tags={user.skills.length > 0 ? user.skills : ["No Skills"]}
+          tags={user.skills?.length > 0 ? user.skills : ["No Skills"]}
           avatar={user.avatar || "https://i.imgur.com/6VBx3io.jpeg"}
           onView={() => handleViewProfile(user.username)}
+          onTagClick={onTagClick} // Pass the handler down
         />
       ))}
     </div>

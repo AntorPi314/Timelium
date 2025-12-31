@@ -40,7 +40,7 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Top Right Action Buttons */}
         <div className="absolute right-5 top-5 flex items-center gap-3">
           
-          {/* ✅ Delete Button (Only shows if onDelete is passed) */}
+          {/* Delete Button (Only shows if onDelete is passed) */}
           {onDelete && (
             <button
               onClick={() => setShowDeleteDialog(true)}
@@ -55,7 +55,7 @@ const PostCard: React.FC<PostCardProps> = ({
             </button>
           )}
 
-          {/* ✅ Like Button */}
+          {/* Like Button */}
           <button
             onClick={onToggleLike}
             className="flex items-center justify-center"
@@ -129,7 +129,7 @@ const PostCard: React.FC<PostCardProps> = ({
         )}
       </div>
 
-      {/* ✅ Custom Delete Confirmation Dialog */}
+      {/*  Custom Delete Confirmation Dialog */}
       {showDeleteDialog && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-[#1F1D47] border border-white/10 w-full max-w-sm rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in duration-200">

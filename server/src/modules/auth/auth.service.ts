@@ -21,13 +21,11 @@ export class AuthService {
 
     // Hash Password
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-
     // Create User
     const user = await this.userService.create({
       ...registerDto,
       password: hashedPassword,
     });
-
     // Return token directly after register
     return this.generateToken(user);
   }
@@ -36,7 +34,6 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     // User khojo (Email ba Username diye)
     let user = await this.userService.findByEmail(loginDto.emailOrUser);
-    
     if (!user) {
       user = await this.userService.findByUsername(loginDto.emailOrUser);
     }
@@ -63,7 +60,8 @@ export class AuthService {
         id: user._id,
         fullname: user.fullname,
         username: user.username,
-        email: user.email
+        email: user.email,
+        avatar: user.avatar //  Added Avatar here
       }
     };
   }

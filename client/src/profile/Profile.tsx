@@ -59,7 +59,6 @@ const Profile = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [experience, setExperience] = useState<any[]>([]);
   const [education, setEducation] = useState<any[]>([]);
-
   const [profile, setProfile] = useState<UserProfileData>({
     avatar: null,
     name: null,
@@ -71,7 +70,6 @@ const Profile = () => {
     github: null,
     facebook: null,
   });
-
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const isMyProfile = currentUser?.username === username;
@@ -91,7 +89,6 @@ const Profile = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
           if (post._id === postId) {
@@ -186,12 +183,25 @@ const Profile = () => {
           facebook: updatedData.facebook,
         },
       };
-
       await axios.put(`${API_URL}/users/profile/update`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+      
       setProfile(updatedData);
+
+      // UPDATE LOCAL STORAGE to sync with Split0 (Sidebar)
+      if (isMyProfile) {
+        const updatedUser = { 
+            ...currentUser, 
+            fullname: updatedData.name, 
+            avatar: updatedData.avatar 
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        
+        // Dispatch custom event so Split0 can re-render immediately
+        window.dispatchEvent(new Event("user-update"));
+      }
+
       toast.success("Profile updated!");
     } catch (error) {
       toast.error("Update failed.");

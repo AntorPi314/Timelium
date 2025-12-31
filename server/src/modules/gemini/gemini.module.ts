@@ -4,7 +4,7 @@ import { GeminiService } from './gemini.service';
 import { ConfigModule } from '@nestjs/config'; // ConfigModule import kora holo
 
 @Module({
-  imports: [ConfigModule], // environment variables ব্যবহারের জন্য
+  imports: [ConfigModule], // environment variables
   controllers: [GeminiController],
   providers: [GeminiService],
 })
