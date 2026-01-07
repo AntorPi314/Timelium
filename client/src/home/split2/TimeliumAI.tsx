@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 type Message = { role: string; text: string; };
@@ -7,6 +7,35 @@ const TimeliumAI = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userFirstName, setUserFirstName] = useState('User');
+  
+  // Auto scroll reference
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // --- Get User First Name ---
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.fullname) {
+          const firstName = user.fullname.split(' ')[0];
+          setUserFirstName(firstName);
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+    }
+  }, []);
+
+  // --- Auto Scroll Function ---
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -17,7 +46,6 @@ const TimeliumAI = () => {
     setLoading(true);
 
     try {
-      // 1. JWT Token Check
       const token = localStorage.getItem('token');
       if (!token) {
         setLoading(false);
@@ -50,7 +78,6 @@ const TimeliumAI = () => {
         throw new Error(data.message || 'AI API call failed');
       }
       
-      // FIX: Backend returns { text: "..." } so we access data.text
       setMessages(prev => [...prev, { 
         role: 'ai', 
         text: data.text || 'No response received' 
@@ -79,11 +106,11 @@ const TimeliumAI = () => {
     <div className="w-full h-[50%] p-4">
       <div className="w-full h-full bg-white rounded-3xl shadow-xl flex flex-col overflow-hidden">
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 scroll-smooth">
           {messages.length === 0 ? (
             <div className="h-full flex items-center justify-center">
-              <div className="bg-linear-to-r from-[#6937CE] via-[#5E20DB] to-[#B618CB] bg-clip-text text-transparent text-3xl font-semibold">
-                Hello, User
+              <div className="bg-gradient-to-r from-[#6937CE] via-[#5E20DB] to-[#B618CB] bg-clip-text text-transparent text-3xl font-semibold">
+                Hello, {userFirstName}
               </div>
             </div>
           ) : (
@@ -108,6 +135,8 @@ const TimeliumAI = () => {
                   </div>
                 </div>
               )}
+              {/* Invisible element to anchor scroll */}
+              <div ref={messagesEndRef} />
             </div>
           )}
         </div>
@@ -120,7 +149,7 @@ const TimeliumAI = () => {
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyPress}
                 placeholder="Ask Timelium AI..."
                 className="flex-1 bg-transparent text-stone-700 text-lg outline-none placeholder:text-stone-400"
                 disabled={loading}

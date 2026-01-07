@@ -27,6 +27,8 @@ import AddSkillDialog from "../components/ui/AddSkillDialog";
 import AddProjectDialog from "../components/ui/AddProjectDialog";
 import AddExperienceDialog from "../components/ui/AddExperienceDialog";
 import AddEducationDialog from "../components/ui/AddEducationDialog";
+// ADDED THIS IMPORT
+import ShowHireMeDialog, { HireMeData } from "../components/ui/ShowHireMeDialog";
 
 interface Post {
   _id: string;
@@ -53,6 +55,7 @@ const Profile = () => {
   const [isAddExperienceOpen, setIsAddExperienceOpen] = useState(false);
   const [isAddEducationOpen, setIsAddEducationOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isHireMeOpen, setIsHireMeOpen] = useState(false);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
@@ -69,6 +72,7 @@ const Profile = () => {
     youtube: null,
     github: null,
     facebook: null,
+    hireMe: { whatsapp: null, messenger: null, telegram: null, contactEmail: null },
   });
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -123,6 +127,11 @@ const Profile = () => {
     }
   };
 
+  const handleHireMeSave = async (data: HireMeData) => {
+    const updatedProfile = { ...profile, hireMe: data };
+    await handleSaveProfile(updatedProfile);
+  };
+
   const fetchProfileAndPosts = useCallback(async () => {
     try {
       const res = await axios.get(`${API_URL}/users/${username}`);
@@ -139,6 +148,8 @@ const Profile = () => {
           youtube: userData.links?.youtube,
           github: userData.links?.github,
           facebook: userData.links?.facebook,
+          // Map hireMe data
+          hireMe: userData.hireMe || { whatsapp: null, messenger: null, telegram: null, contactEmail: null },
         });
 
         setSkills(userData.skills || []);
@@ -182,14 +193,16 @@ const Profile = () => {
           github: updatedData.github,
           facebook: updatedData.facebook,
         },
+        // Include hireMe data in the update
+        hireMe: updatedData.hireMe, 
       };
+
       await axios.put(`${API_URL}/users/profile/update`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       setProfile(updatedData);
 
-      // UPDATE LOCAL STORAGE to sync with Split0 (Sidebar)
       if (isMyProfile) {
         const updatedUser = { 
             ...currentUser, 
@@ -197,8 +210,6 @@ const Profile = () => {
             avatar: updatedData.avatar 
         };
         localStorage.setItem("user", JSON.stringify(updatedUser));
-        
-        // Dispatch custom event so Split0 can re-render immediately
         window.dispatchEvent(new Event("user-update"));
       }
 
@@ -236,7 +247,7 @@ const Profile = () => {
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-purple-500/10 to-transparent pointer-events-none" />
 
         {/* HEADER */}
-        <div className="flex flex-col md:flex-row items-center justify-between mb-10 z-10 gap-6">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-4 md:mb-10 z-10 gap-6 shrink-0">
           <div className="flex items-center gap-8 w-full md:w-auto">
             <h1 className="text-4xl font-cursive text-white italic font-bold">
               Hi, {profile.name || username}
@@ -264,23 +275,26 @@ const Profile = () => {
                 >
                   {tab}
                   {activeTab === tab && (
-                    <span className="absolute bottom-0 left-0 w-8 h-1 bg-white rounded-full transition-all duration-300" />
+                    <span className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-full transition-all duration-300" />
                   )}
                 </button>
               ))}
             </nav>
           </div>
 
-          <button className="bg-white text-[#2E1065] px-6 py-2.5 rounded-full font-bold flex items-center gap-2 hover:bg-gray-100 transition shadow-lg">
+          <button 
+            onClick={() => setIsHireMeOpen(true)}
+            className="bg-white text-[#2E1065] px-6 py-2.5 rounded-full font-bold flex items-center gap-2 hover:bg-gray-100 transition shadow-lg active:scale-95"
+          >
             <MessageSquare className="fill-[#2E1065]" size={18} />
-            Hire me
+            {isMyProfile ? "Edit Contact Info" : "Hire me"}
           </button>
         </div>
 
-        {/* GRID CONTENT */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 z-10 h-full">
-          {/* Left Content Area */}
-          <div className="lg:col-span-8 flex flex-col gap-6 overflow-y-auto no-scrollbar pr-2">
+        {/* GRID CONTENT (Full Height & Scrollable) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 z-10 h-full overflow-hidden">
+          {/* Left Content Area (Scrollable) */}
+          <div className="lg:col-span-8 flex flex-col gap-6 overflow-y-auto no-scrollbar pr-2 h-full pb-24">
             {activeTab === "Posts" && (
               <>
                 {posts.length > 0 ? (
@@ -311,11 +325,19 @@ const Profile = () => {
             )}
 
             {activeTab === "Skills" && (
-              <SkillsSection skills={skills} isMyProfile={isMyProfile} onAdd={() => setIsAddSkillOpen(true)} />
+              <SkillsSection
+                skills={skills}
+                isMyProfile={isMyProfile}
+                onAdd={() => setIsAddSkillOpen(true)}
+              />
             )}
 
             {activeTab === "Projects" && (
-              <ProjectsSection projects={projects} isMyProfile={isMyProfile} onAdd={() => setIsAddProjectOpen(true)} />
+              <ProjectsSection
+                projects={projects}
+                isMyProfile={isMyProfile}
+                onAdd={() => setIsAddProjectOpen(true)}
+              />
             )}
 
             {activeTab === "Experience" && (
@@ -335,9 +357,9 @@ const Profile = () => {
             )}
           </div>
 
-          {/* Right Sidebar */}
-          <div className="lg:col-span-4 flex flex-col items-center text-center">
-            <div className="relative mb-4 group">
+          {/* Right Sidebar (Fixed Scroll Issue) */}
+          <div className="lg:col-span-4 flex flex-col items-center text-center overflow-y-auto no-scrollbar h-full pb-24">
+            <div className="relative mb-4 group shrink-0">
               <div className="w-40 h-40 rounded-full p-[4px] bg-gradient-to-tr from-blue-400 to-purple-500">
                 <img
                   src={profile.avatar || "https://via.placeholder.com/150"}
@@ -350,19 +372,19 @@ const Profile = () => {
             {isMyProfile ? (
               <button
                 onClick={() => setIsCreatePostOpen(true)}
-                className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 mb-4 hover:bg-[#c3d632] transition shadow-lg hover:shadow-[#D4E936]/20"
+                className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 mb-4 hover:bg-[#c3d632] transition shadow-lg hover:shadow-[#D4E936]/20 shrink-0"
               >
                 <PlusCircle size={18} className="text-black" />
                 Create Post
               </button>
             ) : (
-              <button className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 mb-4 hover:bg-[#c3d632] transition">
+              <button className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 mb-4 hover:bg-[#c3d632] transition shrink-0">
                 <PlusCircle size={18} className="text-black" />
                 Follow
               </button>
             )}
 
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-3 shrink-0">
               <h2 className="text-3xl font-bold text-white mb-2 capitalize">
                 {profile.name || username}
               </h2>
@@ -376,11 +398,11 @@ const Profile = () => {
               )}
             </div>
 
-            <p className="text-white/80 text-sm mb-6 leading-relaxed">
+            <p className="text-white/80 text-sm mb-6 leading-relaxed shrink-0">
               {profile.title || "No Title Added"}
             </p>
 
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-8 shrink-0">
               {profile.linkedin && (
                 <SocialIcon
                   icon={<Linkedin size={20} />}
@@ -411,24 +433,34 @@ const Profile = () => {
               )}
             </div>
 
-            <div className="text-left w-full mb-6">
+            <div className="text-left w-full mb-6 shrink-0">
               <h3 className="text-pink-500 text-xl font-bold mb-2 flex items-center gap-2">
                 <MapPin size={18} /> Location
               </h3>
-              <p className="text-white/70 text-sm leading-relaxed mb-3">
+              <p className="text-white/70 text-sm leading-relaxed mb-3 break-words">
                 {profile.location || "N/A"}
               </p>
             </div>
 
-            <div className="text-left w-full">
+            <div className="text-left w-full shrink-0">
               <h3 className="text-pink-500 text-xl font-bold mb-2">About</h3>
-              <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">
+              <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap break-words">
                 {profile.about || "N/A"}
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* GLOBAL MODALS (Outside isMyProfile check because Visitors can view it too) */}
+      <ShowHireMeDialog 
+        open={isHireMeOpen}
+        onClose={() => setIsHireMeOpen(false)}
+        isOwnProfile={isMyProfile}
+        ownerName={profile.name || "User"}
+        initialData={profile.hireMe || { whatsapp: null, messenger: null, telegram: null, contactEmail: null }}
+        onSave={handleHireMeSave}
+      />
 
       {/* MODALS */}
       {isMyProfile && (
@@ -496,7 +528,10 @@ const SkillsSection = ({
         <Code size={24} className="text-pink-500" /> Skills
       </h2>
       {isMyProfile && (
-        <button onClick={onAdd} className="text-pink-500 hover:text-pink-400 transition">
+        <button
+          onClick={onAdd}
+          className="text-pink-500 hover:text-pink-400 transition"
+        >
           <Plus size={20} />
         </button>
       )}
@@ -533,7 +568,10 @@ const ProjectsSection = ({
         <FolderGit2 size={24} className="text-pink-500" /> Projects
       </h2>
       {isMyProfile && (
-        <button onClick={onAdd} className="text-pink-500 hover:text-pink-400 transition">
+        <button
+          onClick={onAdd}
+          className="text-pink-500 hover:text-pink-400 transition"
+        >
           <Plus size={20} />
         </button>
       )}
@@ -593,7 +631,10 @@ const ExperienceSection = ({
         <Briefcase size={24} className="text-pink-500" /> Experience
       </h2>
       {isMyProfile && (
-        <button onClick={onAdd} className="text-pink-500 hover:text-pink-400 transition">
+        <button
+          onClick={onAdd}
+          className="text-pink-500 hover:text-pink-400 transition"
+        >
           <Plus size={20} />
         </button>
       )}
@@ -633,7 +674,10 @@ const EducationSection = ({
         <GraduationCap size={24} className="text-pink-500" /> Education
       </h2>
       {isMyProfile && (
-        <button onClick={onAdd} className="text-pink-500 hover:text-pink-400 transition">
+        <button
+          onClick={onAdd}
+          className="text-pink-500 hover:text-pink-400 transition"
+        >
           <Plus size={20} />
         </button>
       )}

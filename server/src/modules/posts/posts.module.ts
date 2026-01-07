@@ -10,5 +10,6 @@ import { PostsService } from './posts.service';
   ],
   controllers: [PostsController],
   providers: [PostsService],
+  exports: [PostsService], // [Change]: Exporting Service for AI Context
 })
 export class PostsModule {}

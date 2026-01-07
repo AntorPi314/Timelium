@@ -35,11 +35,23 @@ export class User extends Document {
     facebook: string | null;
   };
 
-  // NEW: Skills Array
+  // NEW: Hire Me / Contact Info
+  @Prop({ 
+    type: Object, 
+    default: { whatsapp: null, messenger: null, telegram: null, contactEmail: null } 
+  })
+  hireMe: {
+    whatsapp: string | null;
+    messenger: string | null;
+    telegram: string | null;
+    contactEmail: string | null;
+  };
+
+  // Skills Array
   @Prop({ type: [String], default: [] })
   skills: string[];
 
-  // NEW: Projects Array
+  // Projects Array
   @Prop({
     type: [
       {
@@ -60,7 +72,7 @@ export class User extends Document {
     image?: string;
   }>;
 
-  // NEW: Experience Array
+  // Experience Array
   @Prop({
     type: [
       {
@@ -79,7 +91,7 @@ export class User extends Document {
     description: string;
   }>;
 
-  // NEW: Education Array
+  // Education Array
   @Prop({
     type: [
       {
