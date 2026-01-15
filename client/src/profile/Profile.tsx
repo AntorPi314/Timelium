@@ -305,6 +305,7 @@ const Profile = () => {
                         post.user?.avatar || "https://i.imgur.com/6VBx3io.jpeg"
                       }
                       name={post.user?.fullname || "User"}
+                      username={post.user?.username || ""} // Pass username here
                       likes={post.likes.length}
                       time={new Date(post.createdAt).toLocaleDateString()}
                       content={post.content}

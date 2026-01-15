@@ -15,6 +15,9 @@ export class Post extends Document {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
   likes: Types.ObjectId[];
+
+  @Prop({ type: [String], default: [] })
+  location: string[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

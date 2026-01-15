@@ -21,30 +21,64 @@ interface Post {
 const Split1 = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(""); // Stores current search query
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
-  // Fetch all posts
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/posts`);
-        setPosts(response.data);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-        toast.error("Failed to load posts");
-      } finally {
-        setLoading(false);
+  // Fetch Logic
+  const fetchPosts = async (query = "") => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      let response;
+
+      const params = query ? { q: query } : {};
+
+      if (token && currentUser) {
+        // Logged in: Fetch Personalized Feed + Optional Search
+        response = await axios.get(`${API_URL}/posts/feed`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: params
+        });
+      } else {
+        // Guest: Fetch Generic Feed + Optional Search
+        response = await axios.get(`${API_URL}/posts`, {
+            params: params
+        });
       }
+      
+      setPosts(response.data);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      toast.error("Failed to load posts");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial Fetch & Listener for Search Event from Split0
+  useEffect(() => {
+    // Initial Load
+    fetchPosts();
+
+    // Event Listener Handler
+    const handleSearchEvent = (e: Event) => {
+        const customEvent = e as CustomEvent;
+        const query = customEvent.detail;
+        setSearchQuery(query);
+        fetchPosts(query); // Refetch with new query
     };
 
-    fetchPosts();
+    window.addEventListener('post-search-trigger', handleSearchEvent);
+
+    return () => {
+        window.removeEventListener('post-search-trigger', handleSearchEvent);
+    };
   }, [API_URL]);
 
-  // Handle Like Toggle
+
   const handleToggleLike = async (postId: string) => {
-    // Check if user is logged in
     if (!currentUser) {
       toast.error("Please login to like posts");
       return;
@@ -64,7 +98,6 @@ const Split1 = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       // Update local state
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
@@ -91,7 +124,7 @@ const Split1 = () => {
       {/* Header */}
       <div className="w-full h-14 flex items-center justify-center border-b border-white/10">
         <h2 className="text-white text-2xl font-semibold tracking-wide">
-          For you
+          {searchQuery ? `Search: "${searchQuery}"` : (currentUser ? "Your Feed" : "Trending")}
         </h2>
       </div>
 
@@ -107,6 +140,8 @@ const Split1 = () => {
               key={post._id}
               avatarUrl={post.user?.avatar || "https://i.imgur.com/6VBx3io.jpeg"}
               name={post.user?.fullname || "Anonymous"}
+              // [FIXED] Passing username so click works
+              username={post.user?.username || ""} 
               likes={post.likes.length}
               time={new Date(post.createdAt).toLocaleString("en-US", {
                 month: "short",
@@ -122,8 +157,12 @@ const Split1 = () => {
           ))
         ) : (
           <div className="text-center text-white/50 py-20">
-            <p className="text-xl">No posts yet</p>
-            <p className="text-sm mt-2">Be the first to share something!</p>
+            <p className="text-xl">No posts found</p>
+            {searchQuery ? (
+                 <p className="text-sm mt-2">Try searching for something else.</p>
+            ) : (
+                 <p className="text-sm mt-2">Be the first to share something!</p>
+            )}
           </div>
         )}
       </div>

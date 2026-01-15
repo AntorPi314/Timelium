@@ -9,6 +9,7 @@ import {
   Get,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -33,22 +34,33 @@ export class PostsController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     let imageUrl: string | null = null;
-
     if (file) {
       imageUrl = await this.postsService.uploadImage(file);
     }
-
     const postData = {
       content: body.content,
       image: imageUrl,
     };
-
     return this.postsService.create(postData, req.user.userId);
   }
 
+  // [UPDATED] Get Feed (Guest/Generic) with Search Support
   @Get()
-  async getAllPosts() {
-    return this.postsService.findAll();
+  async getAllPosts(@Req() req: any, @Query('q') query?: string) {
+    // If user is logged in via headers but hitting this endpoint, we try to pass ID
+    let userId = undefined;
+    if (req.headers.authorization) {
+       // Logic handled in service if needed, or rely on 'feed' endpoint for logged in users
+    }
+    // Pass query to service
+    return this.postsService.findAll(undefined, query);
+  }
+  
+  // [UPDATED] Get Personalized Feed with Search Support
+  @UseGuards(JwtAuthGuard)
+  @Get('feed')
+  async getPersonalizedFeed(@Req() req: any, @Query('q') query?: string) {
+      return this.postsService.findAll(req.user.userId, query);
   }
 
   @Get('user/:userId')

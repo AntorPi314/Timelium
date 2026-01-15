@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Heart, Trash, AlertTriangle, X } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 type PostCardProps = {
   avatarUrl: string;
   name: string;
+  username: string; // Added username prop
   likes?: number;
   time?: string;
   content: string;
@@ -16,6 +18,7 @@ type PostCardProps = {
 const PostCard: React.FC<PostCardProps> = ({
   avatarUrl,
   name,
+  username, // Receive username
   likes = 0,
   time = "",
   content,
@@ -25,12 +28,21 @@ const PostCard: React.FC<PostCardProps> = ({
   liked = false,
 }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const navigate = useNavigate(); // Hook for navigation
 
   const confirmDelete = () => {
     if (onDelete) {
       onDelete();
     }
     setShowDeleteDialog(false);
+  };
+
+  // Function to handle navigation to profile
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop bubbling if needed
+    if (username) {
+      navigate(`/${username}`);
+    }
   };
 
   return (
@@ -40,7 +52,7 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Top Right Action Buttons */}
         <div className="absolute right-5 top-5 flex items-center gap-3">
           
-          {/* Delete Button (Only shows if onDelete is passed) */}
+          {/* Delete Button */}
           {onDelete && (
             <button
               onClick={() => setShowDeleteDialog(true)}
@@ -81,10 +93,16 @@ const PostCard: React.FC<PostCardProps> = ({
           <img
             src={avatarUrl}
             alt={`${name} avatar`}
-            className="w-12 h-12 rounded-full object-cover border border-white/40 shadow-sm"
+            onClick={handleProfileClick} // Click to go to profile
+            className="w-12 h-12 rounded-full object-cover border border-white/40 shadow-sm cursor-pointer hover:opacity-80 transition"
           />
           <div className="flex-1">
-            <div className="text-slate-800 font-semibold">{name}</div>
+            <div 
+              onClick={handleProfileClick} // Click to go to profile
+              className="text-slate-800 font-semibold cursor-pointer hover:text-pink-600 hover:underline transition w-fit"
+            >
+              {name}
+            </div>
             <div className="text-slate-500 text-sm">
               {likes} Liked <span className="mx-1">|</span> {time}
             </div>
@@ -129,7 +147,7 @@ const PostCard: React.FC<PostCardProps> = ({
         )}
       </div>
 
-      {/*  Custom Delete Confirmation Dialog */}
+      {/* Custom Delete Confirmation Dialog */}
       {showDeleteDialog && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-[#1F1D47] border border-white/10 w-full max-w-sm rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in duration-200">
