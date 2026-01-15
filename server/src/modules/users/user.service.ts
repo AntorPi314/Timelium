@@ -15,33 +15,43 @@ export class UserService {
     const user = new this.userModel(data);
     return user.save();
   }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email }).exec();
   }
+
   async findByUsername(username: string): Promise<User | null> {
     return this.userModel.findOne({ username }).exec();
   }
+
   async findAll(): Promise<User[]> {
     return this.userModel.find().exec();
   }
+
   async findOne(id: string): Promise<User | null> {
     return this.userModel.findById(id).exec();
   }
 
+  // --- [UPDATED] Deep Search Fix ---
   async searchUsers(query: string): Promise<User[]> {
     if (!query) return [];
-    
+
+    // 1. Clean the query (remove # and trim spaces)
     const cleanQuery = query.replace('#', '').trim(); 
+    
+    // 2. Regex for case-insensitive match
     const regex = new RegExp(cleanQuery, 'i');
 
     return this.userModel.find({
       $or: [
-        { fullname: regex },
-        { username: regex },
-        { skills: { $in: [regex] } }
+        { fullname: regex },       // Search by Name
+        { username: regex },       // Search by Username
+        { 'skills.title': regex }, // [FIX] Search by Category Name (e.g., "Mobile Development")
+        { 'skills.items': regex }  // [FIX] Search by Specific Skill (e.g., "Flutter")
       ]
     }).limit(10).exec();
   }
+  // ---------------------------------
 
   async updateProfile(username: string, data: any): Promise<User | null> {
     return this.userModel
@@ -72,12 +82,12 @@ export class UserService {
     });
   }
 
-  // ADD SKILL
+  // ADD SKILL (Legacy support / Specific logic)
   async addSkill(username: string, skill: string): Promise<User | null> {
     return this.userModel
       .findOneAndUpdate(
         { username },
-        { $addToSet: { skills: skill } }, // Prevents duplicates
+        { $addToSet: { skills: skill } }, 
         { new: true },
       )
       .exec();

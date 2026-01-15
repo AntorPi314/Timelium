@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Search, X } from "lucide-react";
 
 interface TitleAndSearchProps {
-  searchTerm: string; // New prop for syncing input
+  searchTerm: string; 
   onSearch: (query: string) => void;
 }
 
@@ -48,7 +48,7 @@ const TitleAndSearch: React.FC<TitleAndSearchProps> = ({ searchTerm, onSearch })
             <input
               ref={inputRef}
               type="text"
-              value={searchTerm} // Controlled Input
+              value={searchTerm} // Controlled Input (Syncs with Tag Click)
               placeholder="Search people or #tags..."
               className="w-full bg-[#2A284D] text-white px-4 py-2 rounded-full outline-none border border-white/20 focus:border-pink-500 transition-all placeholder:text-gray-400"
               onChange={(e) => onSearch(e.target.value)}

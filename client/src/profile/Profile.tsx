@@ -13,11 +13,6 @@ import {
   MapPin,
   Github,
   Loader2,
-  Briefcase,
-  GraduationCap,
-  Sparkles,
-  FolderGit2,
-  LayoutGrid,
 } from "lucide-react";
 
 // Components
@@ -29,6 +24,12 @@ import CreatePostDialog from "../components/ui/CreatePostDialog";
 import AddProjectDialog from "../components/ui/AddProjectDialog";
 import AddExperienceDialog from "../components/ui/AddExperienceDialog";
 import AddEducationDialog from "../components/ui/AddEducationDialog";
+
+// Importing the new separate section components
+import ProjectsSection from "../components/ui/ProjectsSection";
+import ExperienceSection from "../components/ui/ExperienceSection";
+import EducationSection from "../components/ui/EducationSection";
+
 import ShowHireMeDialog, {
   HireMeData,
 } from "../components/ui/ShowHireMeDialog";
@@ -73,13 +74,12 @@ const Profile = () => {
 
   // Data States
   const [posts, setPosts] = useState<Post[]>([]);
-  const [skills, setSkills] = useState<SkillCategory[]>([]); // Array of Categories
+  const [skills, setSkills] = useState<SkillCategory[]>([]); 
   const [isAddSkillOpen, setIsAddSkillOpen] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [experience, setExperience] = useState<any[]>([]);
   const [education, setEducation] = useState<any[]>([]);
  
-
   // New Skill Input State
   const [newCategoryTitle, setNewCategoryTitle] = useState("");
 
@@ -350,6 +350,73 @@ const Profile = () => {
     else if (activeTab === "Skills") setIsAddSkillOpen(true);
   };
 
+  // --- DELETE HANDLERS (Projects, Experience, Education) ---
+
+  const handleDeleteProject = async (index: number) => {
+    if (!window.confirm("Are you sure you want to delete this project?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const updatedProjects = projects.filter((_, i) => i !== index);
+
+      // Backend update
+      await axios.put(
+        `${API_URL}/users/profile/update`,
+        { projects: updatedProjects },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Local state update
+      setProjects(updatedProjects);
+      toast.success("Project deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete project", error);
+      toast.error("Failed to delete project");
+    }
+  };
+
+  const handleDeleteExperience = async (index: number) => {
+    if (!window.confirm("Are you sure you want to delete this experience?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const updatedExperience = experience.filter((_, i) => i !== index);
+
+      await axios.put(
+        `${API_URL}/users/profile/update`,
+        { experience: updatedExperience },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setExperience(updatedExperience);
+      toast.success("Experience deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete experience", error);
+      toast.error("Failed to delete experience");
+    }
+  };
+
+  const handleDeleteEducation = async (index: number) => {
+    if (!window.confirm("Are you sure you want to delete this education?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const updatedEducation = education.filter((_, i) => i !== index);
+
+      await axios.put(
+        `${API_URL}/users/profile/update`,
+        { education: updatedEducation },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setEducation(updatedEducation);
+      toast.success("Education deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete education", error);
+      toast.error("Failed to delete education");
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-screen w-full bg-[#381B5E] flex items-center justify-center text-white">
@@ -443,10 +510,9 @@ const Profile = () => {
               </>
             )}
 
-            {/* SKILLS TAB (NEW DESIGN) */}
+            {/* SKILLS TAB */}
             {activeTab === "Skills" && (
               <div className="space-y-6">
-
                 {/* Categories Grid */}
                 {skills.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -473,12 +539,12 @@ const Profile = () => {
               </div>
             )}
 
-            {/* PROJECTS TAB */}
             {activeTab === "Projects" && (
               <ProjectsSection
                 projects={projects}
                 isMyProfile={isMyProfile}
                 onAdd={() => setIsAddProjectOpen(true)}
+                onDelete={handleDeleteProject}
               />
             )}
 
@@ -488,6 +554,7 @@ const Profile = () => {
                 experience={experience}
                 isMyProfile={isMyProfile}
                 onAdd={() => setIsAddExperienceOpen(true)}
+                onDelete={handleDeleteExperience}
               />
             )}
 
@@ -497,6 +564,7 @@ const Profile = () => {
                 education={education}
                 isMyProfile={isMyProfile}
                 onAdd={() => setIsAddEducationOpen(true)}
+                onDelete={handleDeleteEducation}
               />
             )}
           </div>
@@ -663,165 +731,6 @@ const Profile = () => {
 const EmptyState = ({ message }: { message: string }) => (
   <div className="text-white/50 text-center py-10 bg-[#1F1D47] rounded-2xl border border-white/5">
     {message}
-  </div>
-);
-
-const ProjectsSection = ({
-  projects,
-  isMyProfile,
-  onAdd,
-}: {
-  projects: any[];
-  isMyProfile: boolean;
-  onAdd: () => void;
-}) => (
-  <div className="bg-[#1F1D47] rounded-2xl p-6 border border-white/5">
-    <div className="flex justify-between items-center mb-4">
-      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-        <FolderGit2 size={24} className="text-pink-500" /> Projects
-      </h2>
-      {isMyProfile && (
-        <button
-          onClick={onAdd}
-          className="text-pink-500 hover:text-pink-400 transition"
-        >
-          <Plus size={20} />
-        </button>
-      )}
-    </div>
-    {projects.length > 0 ? (
-      <div className="space-y-4">
-        {projects.map((project, i) => (
-          <div
-            key={i}
-            className="bg-[#2A284D] p-5 rounded-xl border border-white/10 hover:border-pink-500/30 transition"
-          >
-            <h3 className="text-white font-bold text-lg mb-2">
-              {project.title}
-            </h3>
-            <p className="text-white/70 text-sm mb-3">{project.description}</p>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {project.technologies?.map((tech: string, j: number) => (
-                <span
-                  key={j}
-                  className="bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-xs font-medium border border-blue-500/20"
-                >
-                  {tech}
-                </span>
-              ))}
-            </div>
-            {project.link && (
-              <a
-                href={project.link}
-                target="_blank"
-                rel="noreferrer"
-                className="text-pink-400 hover:text-pink-300 text-sm font-medium hover:underline"
-              >
-                View Project →
-              </a>
-            )}
-          </div>
-        ))}
-      </div>
-    ) : (
-      <p className="text-white/50 italic">No projects added yet.</p>
-    )}
-  </div>
-);
-
-const ExperienceSection = ({
-  experience,
-  isMyProfile,
-  onAdd,
-}: {
-  experience: any[];
-  isMyProfile: boolean;
-  onAdd: () => void;
-}) => (
-  <div className="bg-[#1F1D47] rounded-2xl p-6 border border-white/5">
-    <div className="flex justify-between items-center mb-4">
-      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-        <Briefcase size={24} className="text-pink-500" /> Experience
-      </h2>
-      {isMyProfile && (
-        <button
-          onClick={onAdd}
-          className="text-pink-500 hover:text-pink-400 transition"
-        >
-          <Plus size={20} />
-        </button>
-      )}
-    </div>
-    {experience.length > 0 ? (
-      <div className="space-y-4">
-        {experience.map((exp, i) => (
-          <div
-            key={i}
-            className="bg-[#2A284D] p-5 rounded-xl border border-white/10"
-          >
-            <h3 className="text-white font-bold text-lg">{exp.position}</h3>
-            <p className="text-pink-400 text-sm font-medium mb-1">
-              {exp.company}
-            </p>
-            <p className="text-white/50 text-xs mb-3 uppercase tracking-wider">
-              {exp.duration}
-            </p>
-            <p className="text-white/70 text-sm leading-relaxed">
-              {exp.description}
-            </p>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <p className="text-white/50 italic">No experience added yet.</p>
-    )}
-  </div>
-);
-
-const EducationSection = ({
-  education,
-  isMyProfile,
-  onAdd,
-}: {
-  education: any[];
-  isMyProfile: boolean;
-  onAdd: () => void;
-}) => (
-  <div className="bg-[#1F1D47] rounded-2xl p-6 border border-white/5">
-    <div className="flex justify-between items-center mb-4">
-      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-        <GraduationCap size={24} className="text-pink-500" /> Education
-      </h2>
-      {isMyProfile && (
-        <button
-          onClick={onAdd}
-          className="text-pink-500 hover:text-pink-400 transition"
-        >
-          <Plus size={20} />
-        </button>
-      )}
-    </div>
-    {education.length > 0 ? (
-      <div className="space-y-4">
-        {education.map((edu, i) => (
-          <div
-            key={i}
-            className="bg-[#2A284D] p-5 rounded-xl border border-white/10"
-          >
-            <h3 className="text-white font-bold text-lg">{edu.degree}</h3>
-            <p className="text-pink-400 text-sm font-medium mb-1">
-              {edu.institution}
-            </p>
-            <p className="text-white/50 text-xs mb-2 uppercase tracking-wider">
-              {edu.field}
-            </p>
-            <p className="text-white/70 text-sm">{edu.year}</p>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <p className="text-white/50 italic">No education added yet.</p>
-    )}
   </div>
 );
 

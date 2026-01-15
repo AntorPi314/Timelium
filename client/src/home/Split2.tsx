@@ -7,6 +7,10 @@ const Split2 = () => {
   // Search state parent e manage hobe
   const [searchQuery, setSearchQuery] = useState("");
 
+  const handleTagClick = (tag: string) => {
+    setSearchQuery(tag); // State update trigger korbe
+  };
+
   return (
     <div className='w-[32%] h-full bg-[#381B5E] flex flex-col'>
       {/* Input box e current value pathano hocche jate tag click korle input update hoy */}
@@ -18,7 +22,7 @@ const Split2 = () => {
       {/* SearchResult e function pass kora hocche jate tag click korle query update hoy */}
       <SearchResult 
         query={searchQuery} 
-        onTagClick={setSearchQuery} 
+        onTagClick={handleTagClick} 
       />
       
       <TimeliumAI/>
