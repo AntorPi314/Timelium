@@ -27,7 +27,10 @@ export class User extends Document {
   @Prop({ default: null })
   about: string;
 
-  @Prop({ type: Object, default: { linkedin: null, youtube: null, github: null, facebook: null } })
+  @Prop({
+    type: Object,
+    default: { linkedin: null, youtube: null, github: null, facebook: null },
+  })
   links: {
     linkedin: string | null;
     youtube: string | null;
@@ -36,9 +39,14 @@ export class User extends Document {
   };
 
   // NEW: Hire Me / Contact Info
-  @Prop({ 
-    type: Object, 
-    default: { whatsapp: null, messenger: null, telegram: null, contactEmail: null } 
+  @Prop({
+    type: Object,
+    default: {
+      whatsapp: null,
+      messenger: null,
+      telegram: null,
+      contactEmail: null,
+    },
   })
   hireMe: {
     whatsapp: string | null;
@@ -47,9 +55,16 @@ export class User extends Document {
     contactEmail: string | null;
   };
 
-  // Skills Array
-  @Prop({ type: [String], default: [] })
-  skills: string[];
+  @Prop({
+    type: [
+      {
+        title: { type: String, required: true },
+        items: { type: [String], default: [] },
+      },
+    ],
+    default: [],
+  })
+  skills: { title: string; items: string[] }[];
 
   // Projects Array
   @Prop({

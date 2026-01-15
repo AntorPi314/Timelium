@@ -52,7 +52,7 @@ export class PostsService {
             .find({ content: regex })
             .populate('user', 'fullname username avatar')
             .sort({ createdAt: -1 })
-            .limit(50) // Limit search results
+            .limit(50)
             .exec();
     }
 

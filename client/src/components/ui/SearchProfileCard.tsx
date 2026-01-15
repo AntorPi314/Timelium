@@ -2,7 +2,8 @@ import React from "react";
 
 interface SearchProfileCardProps {
   name: string;
-  tags: string[];
+  // tags এখন string হতে পারে অথবা {title: string, items: string[]} অবজেক্ট হতে পারে
+  tags: any[]; 
   avatar: string;
   onView?: () => void;
   onTagClick?: (tag: string) => void;
@@ -30,34 +31,38 @@ const SearchProfileCard: React.FC<SearchProfileCardProps> = ({
         <div className="flex flex-col gap-1">
           <h2 className="text-base font-semibold text-white leading-tight">{name}</h2>
           
-          {/* Updated Tag Styling */}
+          {/* Updated Tag Styling to handle Objects */}
           <div className="flex flex-wrap gap-2">
-            {tags.length > 0 ? (
-              tags.slice(0, 3).map((tag, index) => (
-                <span
-                  key={index}
-                  onClick={(e) => {
-                    e.stopPropagation(); 
-                    if (onTagClick) onTagClick(tag);
-                  }}
-                  className="text-[11px] font-medium text-pink-300 bg-pink-500/10 px-2 py-0.5 rounded-full cursor-pointer border border-pink-500/20 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all duration-200"
-                >
-                  #{tag}
-                </span>
-              ))
+            {tags && tags.length > 0 ? (
+              tags.slice(0, 3).map((tag, index) => {
+                // চেক করছি ট্যাগ কি অবজেক্ট নাকি স্ট্রিং
+                const displayTag = typeof tag === 'object' ? tag.title : tag;
+                
+                return (
+                  <span
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation(); 
+                      if (onTagClick) onTagClick(displayTag);
+                    }}
+                    className="text-[11px] font-medium text-pink-300 bg-pink-500/10 px-2 py-0.5 rounded-full cursor-pointer border border-pink-500/20 hover:bg-pink-600 hover:text-white hover:border-pink-600 transition-all duration-200"
+                  >
+                    #{displayTag}
+                  </span>
+                );
+              })
             ) : (
               <span className="text-xs text-gray-500">No skills</span>
             )}
             
-            
-            {tags.length > 3 && (
+            {tags && tags.length > 3 && (
                <span className="text-[10px] text-gray-500 flex items-center">+{tags.length - 3}</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* View Button (Same as before) */}
+      {/* View Button */}
       <button
         onClick={onView}
         className="px-5 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold rounded-full transition-all shadow-lg hover:shadow-pink-500/30"
