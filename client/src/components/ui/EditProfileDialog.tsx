@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 // Import Country and City from the package
 import { Country, City } from "country-state-city";
-import ShowHireMeDialog, { HireMeData } from "./ShowHireMeDialog";
+import { type HireMeData } from "./ShowHireMeDialog";
 
 export interface UserProfileData {
   avatar: string | null;

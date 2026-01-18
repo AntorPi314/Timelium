@@ -30,9 +30,7 @@ import ProjectsSection from "../components/ui/ProjectsSection";
 import ExperienceSection from "../components/ui/ExperienceSection";
 import EducationSection from "../components/ui/EducationSection";
 
-import ShowHireMeDialog, {
-  HireMeData,
-} from "../components/ui/ShowHireMeDialog";
+import ShowHireMeDialog, {type HireMeData,} from "../components/ui/ShowHireMeDialog";
 import SkillCategoryCard from "../components/ui/SkillCategoryCard";
 import AddSkillDialog from "../components/ui/AddSkillDialog";
 
@@ -46,6 +44,7 @@ interface Post {
   user: {
     _id: string;
     fullname: string;
+    username: string;
     avatar: string;
   };
   likes: string[];
@@ -178,6 +177,7 @@ const Profile = () => {
   };
 
   // 1. Add New Card (Category)
+  // @ts-ignore
   const handleAddCategory = async () => {
     if (!newCategoryTitle.trim()) return;
 
