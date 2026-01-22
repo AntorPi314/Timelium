@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 
 // API URL (env theke nile valo, ekhon hardcode korlam testing er jonno)
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/auth";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 /* ---------------------- ZOD SCHEMAS ----------------------- */
 const loginSchema = z.object({
@@ -51,7 +51,7 @@ const LoginSignUpCard = ({ open, onClose }: LoginSignUpCardProps) => {
     try {
       if (tab === "login") {
         // --- LOGIN REQUEST ---
-        const response = await axios.post(`${API_URL}/login`, {
+        const response = await axios.post(`${BASE_URL}/auth/login`, {
           emailOrUser: data.emailOrUser,
           password: data.password
         });
@@ -63,7 +63,7 @@ const LoginSignUpCard = ({ open, onClose }: LoginSignUpCardProps) => {
         onClose(); // Close modal
       } else {
         // --- SIGNUP REQUEST ---
-        const response = await axios.post(`${API_URL}/register`, {
+        const response = await axios.post(`${BASE_URL}/auth/register`, {
           fullname: data.fullname,
           username: data.username,
           email: data.email,
