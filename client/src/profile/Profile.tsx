@@ -426,23 +426,23 @@ const Profile = () => {
   }
 
   return (
-    <div className="h-screen w-full bg-[#381B5E] p-4 md:p-4 flex items-center justify-center overflow-hidden">
-      <div className="w-full max-w-[1400px] bg-[#2E1065] rounded-[40px] p-6 md:p-4 shadow-2xl h-[90vh] flex flex-col relative overflow-hidden">
+    <div className="min-h-screen w-full bg-[#381B5E] p-2 md:p-4 flex items-center justify-center overflow-hidden">
+      <div className="w-full max-w-[1400px] bg-[#2E1065] rounded-[20px] md:rounded-[40px] p-4 md:p-6 shadow-2xl h-[95vh] md:h-[90vh] flex flex-col relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-purple-500/10 to-transparent pointer-events-none" />
 
         {/* HEADER */}
-        <div className="flex flex-col md:flex-row items-center justify-between mb-4 md:mb-10 z-10 gap-6 shrink-0">
-          <div className="flex items-center gap-8 w-full md:w-auto">
-            <h1 className="text-4xl font-cursive text-white italic font-bold">
-              Hi, {profile.name || username}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 z-10 gap-3 md:gap-6 shrink-0">
+          <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto">
+            <h1 className="text-2xl md:text-4xl font-cursive text-white italic font-bold truncate">
+              Hi, there!
             </h1>
 
             {isMyProfile && (
               <button
                 onClick={handleOpenDialog}
-                className="w-10 h-10 rounded-full border-2 border-white/30 flex items-center justify-center text-white hover:bg-white/10 transition"
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white/30 flex items-center justify-center text-white hover:bg-white/10 transition shrink-0"
               >
-                <Plus size={24} />
+                <Plus size={20} className="md:w-6 md:h-6" />
               </button>
             )}
 
@@ -466,9 +466,31 @@ const Profile = () => {
             </nav>
           </div>
 
+          {/* Mobile Tabs - Horizontal Scrollable */}
+          <div className="md:hidden w-full overflow-x-auto no-scrollbar">
+            <nav className="flex items-center gap-4 pb-2 min-w-max">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`text-sm font-medium transition-all duration-300 relative pb-1 whitespace-nowrap ${
+                    activeTab === tab
+                      ? "text-white"
+                      : "text-white/60"
+                  }`}
+                >
+                  {tab}
+                  {activeTab === tab && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full" />
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
+
           <button
             onClick={() => setIsHireMeOpen(true)}
-            className="bg-white text-[#2E1065] px-6 py-2.5 rounded-full font-bold flex items-center gap-2 hover:bg-gray-100 transition shadow-lg active:scale-95"
+            className="hidden md:flex bg-white text-[#2E1065] px-6 py-2.5 rounded-full font-bold items-center gap-2 hover:bg-gray-100 transition shadow-lg active:scale-95"
           >
             <MessageSquare className="fill-[#2E1065]" size={18} />
             {isMyProfile ? "Edit Contact Info" : "Hire me"}
@@ -476,9 +498,9 @@ const Profile = () => {
         </div>
 
         {/* GRID CONTENT (Full Height & Scrollable) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 z-10 h-full overflow-hidden">
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-6 lg:gap-12 z-10 flex-1 overflow-hidden">
           {/* Left Content Area (Scrollable) */}
-          <div className="lg:col-span-8 flex flex-col gap-6 overflow-y-auto no-scrollbar pr-2 h-full pb-24">
+          <div className="lg:col-span-8 flex flex-col gap-4 md:gap-6 overflow-y-auto no-scrollbar pr-0 lg:pr-2 flex-1 pb-4 lg:pb-24">
             {/* POSTS TAB */}
             {activeTab === "Posts" && (
               <>
@@ -569,52 +591,89 @@ const Profile = () => {
             )}
           </div>
 
-          {/* Right Sidebar */}
-          <div className="lg:col-span-4 flex flex-col items-center text-center overflow-y-auto no-scrollbar h-full pb-24">
-            <div className="relative mb-4 group shrink-0">
-              <div className="w-40 h-40 rounded-full p-[4px] bg-gradient-to-tr from-blue-400 to-purple-500">
+          {/* Right Sidebar - shows first on mobile due to flex-col-reverse */}
+          <div className="lg:col-span-4 flex flex-row lg:flex-col items-center lg:text-center overflow-visible lg:overflow-y-auto no-scrollbar lg:h-full pb-4 lg:pb-24 gap-4 lg:gap-0">
+            {/* Avatar + Actions Row on Mobile, Column on Desktop */}
+            <div className="relative shrink-0">
+              <div className="w-20 h-20 lg:w-40 lg:h-40 rounded-full p-[3px] lg:p-[4px] bg-gradient-to-tr from-blue-400 to-purple-500">
                 <img
                   src={profile.avatar || "https://via.placeholder.com/150"}
                   alt="Profile"
-                  className="w-full h-full rounded-full object-cover border-4 border-[#2E1065] bg-white"
+                  className="w-full h-full rounded-full object-cover border-2 lg:border-4 border-[#2E1065] bg-white"
                 />
               </div>
             </div>
 
-            {isMyProfile ? (
-              <button
-                onClick={() => setIsCreatePostOpen(true)}
-                className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 mb-4 hover:bg-[#c3d632] transition shadow-lg hover:shadow-[#D4E936]/20 shrink-0"
-              >
-                <PlusCircle size={18} className="text-black" />
-                Create Post
-              </button>
-            ) : (
-              <button className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 mb-4 hover:bg-[#c3d632] transition shrink-0">
-                <PlusCircle size={18} className="text-black" />
-                Follow
-              </button>
-            )}
+            {/* Mobile: Name + Action inline / Desktop: Stacked */}
+            <div className="flex-1 lg:flex-none flex flex-col items-start lg:items-center gap-2 lg:gap-0">
+              {/* Name Row */}
+              <div className="flex items-center gap-2 lg:justify-center lg:mb-2">
+                <h2 className="text-xl lg:text-3xl font-bold text-white capitalize">
+                  {profile.name || username}
+                </h2>
+                {isMyProfile && (
+                  <button
+                    onClick={() => setIsEditOpen(true)}
+                    className="hover:bg-white/10 p-1 lg:p-2 rounded-full transition"
+                  >
+                    <UserRoundPen className="text-pink-500 w-4 h-4 lg:w-6 lg:h-6" />
+                  </button>
+                )}
+              </div>
 
-            <div className="flex items-center justify-center gap-3 shrink-0">
-              <h2 className="text-3xl font-bold text-white mb-2 capitalize">
-                {profile.name || username}
-              </h2>
-              {isMyProfile && (
+              {/* Title */}
+              <p className="text-white/80 text-xs lg:text-sm leading-relaxed lg:mb-4 line-clamp-2 lg:line-clamp-none text-left lg:text-center">
+                {profile.title || "No Title Added"}
+              </p>
+
+              {/* Action Buttons - Mobile Inline */}
+              <div className="flex items-center gap-2 lg:hidden">
+                {isMyProfile ? (
+                  <button
+                    onClick={() => setIsCreatePostOpen(true)}
+                    className="bg-[#D4E936] text-black px-4 py-1.5 rounded-full font-bold text-sm flex items-center gap-1 hover:bg-[#c3d632] transition"
+                  >
+                    <PlusCircle size={14} className="text-black" />
+                    Post
+                  </button>
+                ) : (
+                  <button className="bg-[#D4E936] text-black px-4 py-1.5 rounded-full font-bold text-sm flex items-center gap-1 hover:bg-[#c3d632] transition">
+                    <PlusCircle size={14} className="text-black" />
+                    Follow
+                  </button>
+                )}
                 <button
-                  onClick={() => setIsEditOpen(true)}
-                  className="hover:bg-white/10 p-2 rounded-full transition"
+                  onClick={() => setIsHireMeOpen(true)}
+                  className="bg-white text-[#2E1065] px-4 py-1.5 rounded-full font-bold text-sm flex items-center gap-1 hover:bg-gray-100 transition"
                 >
-                  <UserRoundPen className="text-pink-500 w-6 h-6" />
+                  <MessageSquare className="fill-[#2E1065]" size={14} />
+                  {isMyProfile ? "Contact" : "Hire"}
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Only: Full Action Buttons */}
+            <div className="hidden lg:block lg:mb-4">
+              {isMyProfile ? (
+                <button
+                  onClick={() => setIsCreatePostOpen(true)}
+                  className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-[#c3d632] transition shadow-lg hover:shadow-[#D4E936]/20"
+                >
+                  <PlusCircle size={18} className="text-black" />
+                  Create Post
+                </button>
+              ) : (
+                <button className="bg-[#D4E936] text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-[#c3d632] transition">
+                  <PlusCircle size={18} className="text-black" />
+                  Follow
                 </button>
               )}
             </div>
 
-            <p className="text-white/80 text-sm mb-6 leading-relaxed shrink-0">
-              {profile.title || "No Title Added"}
-            </p>
+            {/* Desktop Only: Social Links, Location, About */}
+            <div className="hidden lg:block">
 
-            <div className="flex items-center gap-4 mb-8 shrink-0">
+            <div className="flex items-center justify-center gap-4 mb-8 shrink-0">
               {profile.linkedin && (
                 <SocialIcon
                   icon={<Linkedin size={20} />}
@@ -659,6 +718,7 @@ const Profile = () => {
               <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap break-words">
                 {profile.about || "N/A"}
               </p>
+            </div>
             </div>
           </div>
         </div>

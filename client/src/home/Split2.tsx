@@ -12,7 +12,7 @@ const Split2 = () => {
   };
 
   return (
-    <div className='w-[32%] h-full bg-[#381B5E] flex flex-col'>
+    <div className='w-full h-full bg-[#381B5E] flex flex-col'>
       {/* Input box e current value pathano hocche jate tag click korle input update hoy */}
       <TitleAndSearch 
         searchTerm={searchQuery} 

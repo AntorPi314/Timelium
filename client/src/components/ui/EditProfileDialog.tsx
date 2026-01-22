@@ -201,6 +201,9 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
             <Dialog.Title className="text-xl font-bold text-white flex items-center gap-2">
               <UserRoundPen size={20} className="text-pink-500" /> Edit Profile
             </Dialog.Title>
+            <Dialog.Description className="hidden">
+              Update your profile information
+            </Dialog.Description>
             <Dialog.Close className="text-gray-400 hover:text-white transition">
               <X size={24} />
             </Dialog.Close>

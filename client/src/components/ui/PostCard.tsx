@@ -47,21 +47,21 @@ const PostCard: React.FC<PostCardProps> = ({
 
   return (
     <>
-      <div className="w-full max-w-3xl bg-slate-50/90 rounded-2xl p-5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.25)] relative transition-all hover:shadow-xl">
+      <div className="w-full max-w-3xl bg-slate-50/90 rounded-2xl p-4 md:p-5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.25)] relative transition-all hover:shadow-xl">
         
         {/* Top Right Action Buttons */}
-        <div className="absolute right-5 top-5 flex items-center gap-3">
+        <div className="absolute right-3 md:right-5 top-3 md:top-5 flex items-center gap-2 md:gap-3">
           
           {/* Delete Button */}
           {onDelete && (
             <button
               onClick={() => setShowDeleteDialog(true)}
-              className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-md hover:bg-red-50 transition group"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white flex items-center justify-center shadow-md hover:bg-red-50 transition group"
               title="Delete Post"
             >
               <Trash
-                size={18}
-                className="text-gray-400 group-hover:text-red-500 transition"
+                size={16}
+                className="text-gray-400 group-hover:text-red-500 transition md:w-[18px] md:h-[18px]"
                 strokeWidth={2}
               />
             </button>
@@ -74,13 +74,13 @@ const PostCard: React.FC<PostCardProps> = ({
             title="Like Post"
           >
             <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md transform transition active:scale-95 ${
+              className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-md transform transition active:scale-95 ${
                 liked ? "bg-rose-500" : "bg-white"
               }`}
             >
               <Heart
-                size={22}
-                className={liked ? "text-white" : "text-rose-500"}
+                size={18}
+                className={`${liked ? "text-white" : "text-rose-500"} md:w-[22px] md:h-[22px]`}
                 strokeWidth={1.6}
                 fill={liked ? "currentColor" : "none"}
               />
@@ -89,12 +89,12 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
 
         {/* Header: avatar, name, meta */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4 pr-16 md:pr-20">
           <img
             src={avatarUrl}
             alt={`${name} avatar`}
             onClick={handleProfileClick} // Click to go to profile
-            className="w-12 h-12 rounded-full object-cover border border-white/40 shadow-sm cursor-pointer hover:opacity-80 transition"
+            className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover border border-white/40 shadow-sm cursor-pointer hover:opacity-80 transition shrink-0"
           />
           <div className="flex-1">
             <div 

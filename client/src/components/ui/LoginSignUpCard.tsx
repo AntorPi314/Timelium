@@ -91,8 +91,8 @@ const LoginSignUpCard = ({ open, onClose }: LoginSignUpCardProps) => {
         <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
 
         <Dialog.Content
-          className="fixed z-50 top-1/2 left-1/2 w-[400px] -translate-x-1/2 -translate-y-1/2 
-          bg-[#1F1D47] p-8 rounded-2xl shadow-xl border border-white/10"
+          className="fixed z-50 top-1/2 left-1/2 w-[90vw] max-w-[400px] -translate-x-1/2 -translate-y-1/2 
+          bg-[#1F1D47] p-6 md:p-8 rounded-2xl shadow-xl border border-white/10"
         >
           <Dialog.Close className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl">
             ✕
@@ -101,6 +101,9 @@ const LoginSignUpCard = ({ open, onClose }: LoginSignUpCardProps) => {
           <Dialog.Title className="text-white text-2xl font-semibold text-center mb-6">
             {tab === "login" ? "Login" : "Create an Account"}
           </Dialog.Title>
+          <Dialog.Description className="hidden">
+            {tab === "login" ? "Login to your account" : "Create a new account"}
+          </Dialog.Description>
 
           {/* TAB SWITCH */}
           <div className="flex mb-6 bg-white/10 rounded-xl p-1">

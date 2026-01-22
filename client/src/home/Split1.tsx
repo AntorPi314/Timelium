@@ -49,9 +49,17 @@ const Split1 = () => {
       }
       
       setPosts(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching posts:", error);
-      toast.error("Failed to load posts");
+      if (error.response && error.response.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        toast.error("Session expired. Please login again.");
+        window.location.reload(); 
+      } else {
+        toast.error("Failed to load posts");
+      }
     } finally {
       setLoading(false);
     }
@@ -120,7 +128,7 @@ const Split1 = () => {
   };
 
   return (
-    <div className="w-[43%] h-full bg-[#33175B] flex flex-col">
+    <div className="flex-1 lg:flex-none w-full lg:w-[43%] h-full bg-[#33175B] flex flex-col">
       {/* Header */}
       <div className="w-full h-14 flex items-center justify-center border-b border-white/10">
         <h2 className="text-white text-2xl font-semibold tracking-wide">
@@ -129,7 +137,7 @@ const Split1 = () => {
       </div>
 
       {/* Posts Scroll Section */}
-      <div className="flex-1 w-full px-6 py-8 space-y-8 overflow-y-auto no-scrollbar">
+      <div className="flex-1 w-full px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8 overflow-y-auto no-scrollbar">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="animate-spin w-10 h-10 text-pink-500" />
